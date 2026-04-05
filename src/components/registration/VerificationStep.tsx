@@ -71,6 +71,7 @@ export default function VerificationStep({
     control,
     handleSubmit,
     watch,
+    reset,
     formState: { errors },
   } = useForm<VerificationFormData>({
     resolver: zodResolver(verificationSchema),
@@ -96,7 +97,8 @@ export default function VerificationStep({
     if (result) {
       setDisplayOtp(result.otp);
     }
-  }, [sendOtp, email]);
+    reset({ otp: "" })
+  }, [sendOtp, email, reset]);
 
   const onSubmit = async (data: VerificationFormData) => {
     const result = await verifyOtp({ email, otp: data.otp });
