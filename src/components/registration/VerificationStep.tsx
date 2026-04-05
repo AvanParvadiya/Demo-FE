@@ -61,6 +61,7 @@ export default function VerificationStep({
     mutate: verifyOtp,
     loading: verifying,
     error: verifyError,
+    reset: resetVerify,
   } = useApiMutation<{ email: string; otp: string }, VerifyOtpResponse>(
     "post",
     API_ENDPOINTS.OTP.VERIFY
@@ -153,7 +154,10 @@ export default function VerificationStep({
         render={({ field }) => (
           <OtpInput
             value={field.value}
-            onChange={field.onChange}
+            onChange={(val) => {
+              field.onChange(val);
+              if (verifyError) resetVerify();
+            }}
             error={!!errors.otp || !!verifyError}
             helperText={errors.otp?.message || verifyError || ""}
           />
