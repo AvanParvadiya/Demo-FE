@@ -9,8 +9,8 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
+import { FormTextField } from "@/components/common";
 
 interface AddCertificationDialogProps {
   open: boolean;
@@ -23,12 +23,7 @@ export default function AddCertificationDialog({
   onClose,
   onAdd,
 }: AddCertificationDialogProps) {
-  const {
-    control,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<CertificationFormData>({
+  const { control, handleSubmit, reset } = useForm<CertificationFormData>({
     resolver: zodResolver(certificationSchema),
     defaultValues: { name: "", issuingBody: "", year: "" },
   });
@@ -58,55 +53,31 @@ export default function AddCertificationDialog({
 
       <DialogContent>
         <Stack spacing={2.5} sx={{ mt: 1 }}>
-          <Controller
+          <FormTextField<CertificationFormData>
             name="name"
             control={control}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                id="certName"
-                label="Certification Name"
-                placeholder="e.g. CPA, CA, ACCA"
-                fullWidth
-                required
-                error={!!errors.name}
-                helperText={errors.name?.message}
-              />
-            )}
+            id="certName"
+            label="Certification Name"
+            placeholder="e.g. CPA, CA, ACCA"
+            required
           />
 
-          <Controller
+          <FormTextField<CertificationFormData>
             name="issuingBody"
             control={control}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                id="certIssuingBody"
-                label="Issuing Body"
-                placeholder="e.g. AICPA, ICAI"
-                fullWidth
-                required
-                error={!!errors.issuingBody}
-                helperText={errors.issuingBody?.message}
-              />
-            )}
+            id="certIssuingBody"
+            label="Issuing Body"
+            placeholder="e.g. AICPA, ICAI"
+            required
           />
 
-          <Controller
+          <FormTextField<CertificationFormData>
             name="year"
             control={control}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                id="certYear"
-                label="Year Obtained"
-                placeholder="e.g. 2023"
-                fullWidth
-                required
-                error={!!errors.year}
-                helperText={errors.year?.message}
-              />
-            )}
+            id="certYear"
+            label="Year Obtained"
+            placeholder="e.g. 2023"
+            required
           />
         </Stack>
       </DialogContent>

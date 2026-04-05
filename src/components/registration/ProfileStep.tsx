@@ -17,13 +17,13 @@ import FormControl from "@mui/material/FormControl";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import FormHelperText from "@mui/material/FormHelperText";
 import IconButton from "@mui/material/IconButton";
-import MenuItem from "@mui/material/MenuItem";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { FormSelect, FormCheckbox } from "@/components/common";
+import type { SelectOption } from "@/components/common";
 import AddCertificationDialog from "./AddCertificationDialog";
 
 interface ProfileStepProps {
@@ -33,6 +33,17 @@ interface ProfileStepProps {
   onNext: (data: ProfileFormData) => void;
   onBack: () => void;
 }
+
+// Map constants to SelectOption format for FormSelect
+const auditSectorOptions: SelectOption[] = AUDIT_SECTORS.map((s) => ({
+  label: s,
+  value: s,
+}));
+
+const specializedAreaOptions: SelectOption[] = SPECIALIZED_AREAS.map((a) => ({
+  label: a,
+  value: a,
+}));
 
 export default function ProfileStep({
   defaultValues,
@@ -154,58 +165,28 @@ export default function ProfileStep({
       />
 
       <Stack spacing={3}>
-        {/* --- Primary Audit Sector --- */}
-        <Controller
+        {/* --- Primary Audit Sector (using FormSelect) --- */}
+        <FormSelect<ProfileFormData>
           name="primaryAuditSector"
           control={control}
-          render={({ field }) => (
-            <TextField
-              {...field}
-              id="primaryAuditSector"
-              select
-              label="Primary Audit Sector"
-              required
-              fullWidth
-              error={!!errors.primaryAuditSector}
-              helperText={errors.primaryAuditSector?.message}
-            >
-              <MenuItem value="" disabled>
-                Select sector
-              </MenuItem>
-              {AUDIT_SECTORS.map((sector) => (
-                <MenuItem key={sector} value={sector}>
-                  {sector}
-                </MenuItem>
-              ))}
-            </TextField>
-          )}
+          label="Primary Audit Sector"
+          required
+          options={auditSectorOptions}
+          placeholder="Select sector"
         />
 
-        {/* --- Specialized Audit Area --- */}
-        <Controller
+        {/* --- Specialized Audit Area (using FormSelect) --- */}
+        <FormSelect<ProfileFormData>
           name="specializedAuditArea"
           control={control}
-          render={({ field }) => (
-            <TextField
-              {...field}
-              id="specializedAuditArea"
-              select
-              label="Specialized Audit Area"
-              fullWidth
-            >
-              <MenuItem value="">
-                <em>None</em>
-              </MenuItem>
-              {SPECIALIZED_AREAS.map((area) => (
-                <MenuItem key={area} value={area}>
-                  {area}
-                </MenuItem>
-              ))}
-            </TextField>
-          )}
+          label="Specialized Audit Area"
+          options={[
+            { label: "None", value: "" },
+            ...specializedAreaOptions,
+          ]}
         />
 
-        {/* --- Jurisdictions --- */}
+        {/* --- Jurisdictions (checkbox grid — custom layout, kept with Controller) --- */}
         <Controller
           name="jurisdictions"
           control={control}
@@ -267,56 +248,38 @@ export default function ProfileStep({
           )}
         />
 
-        {/* --- Independence Declaration --- */}
-        <Controller
-          name="independenceDeclaration"
-          control={control}
-          render={({ field }) => (
-            <FormControl error={!!errors.independenceDeclaration}>
-              <Paper
-                variant="outlined"
-                sx={{
-                  p: 2,
-                  borderRadius: 2,
-                  borderColor: errors.independenceDeclaration
-                    ? "error.main"
-                    : "grey.300",
-                }}
-              >
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={!!field.value}
-                      onChange={(e) => field.onChange(e.target.checked)}
-                    />
-                  }
-                  label={
-                    <Box>
-                      <Typography variant="body2" fontWeight={600}>
-                        Independence Declaration *
-                      </Typography>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ lineHeight: 1.5 }}
-                      >
-                        I hereby confirm that I have no conflicts of interest
-                        and will maintain independence in accordance with
-                        professional auditing standards.
-                      </Typography>
-                    </Box>
-                  }
-                  sx={{ alignItems: "flex-start", m: 0 }}
-                />
-              </Paper>
-              {errors.independenceDeclaration && (
-                <FormHelperText>
-                  {errors.independenceDeclaration.message}
-                </FormHelperText>
-              )}
-            </FormControl>
-          )}
-        />
+        {/* --- Independence Declaration (using FormCheckbox) --- */}
+        <Paper
+          variant="outlined"
+          sx={{
+            p: 2,
+            borderRadius: 2,
+            borderColor: errors.independenceDeclaration
+              ? "error.main"
+              : "grey.300",
+          }}
+        >
+          <FormCheckbox<ProfileFormData>
+            name="independenceDeclaration"
+            control={control}
+            label={
+              <Box>
+                <Typography variant="body2" fontWeight={600}>
+                  Independence Declaration *
+                </Typography>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ lineHeight: 1.5 }}
+                >
+                  I hereby confirm that I have no conflicts of interest and will
+                  maintain independence in accordance with professional auditing
+                  standards.
+                </Typography>
+              </Box>
+            }
+          />
+        </Paper>
       </Stack>
 
       <Stack direction="row" spacing={2} sx={{ mt: 4 }}>

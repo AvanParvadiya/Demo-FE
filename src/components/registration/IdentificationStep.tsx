@@ -1,10 +1,10 @@
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
+import { FormTextField } from "@/components/common";
 import {
   identificationSchema,
   IdentificationFormData,
@@ -19,11 +19,7 @@ export default function IdentificationStep({
   defaultValues,
   onNext,
 }: IdentificationStepProps) {
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<IdentificationFormData>({
+  const { control, handleSubmit } = useForm<IdentificationFormData>({
     resolver: zodResolver(identificationSchema),
     defaultValues: {
       firstName: "",
@@ -43,56 +39,29 @@ export default function IdentificationStep({
       </Typography>
 
       <Stack spacing={3}>
-        <Controller
+        <FormTextField<IdentificationFormData>
           name="firstName"
           control={control}
-          render={({ field }) => (
-            <TextField
-              {...field}
-              id="firstName"
-              label="First Name"
-              placeholder="Enter your first name"
-              required
-              fullWidth
-              error={!!errors.firstName}
-              helperText={errors.firstName?.message}
-            />
-          )}
+          label="First Name"
+          placeholder="Enter your first name"
+          required
         />
 
-        <Controller
+        <FormTextField<IdentificationFormData>
           name="lastName"
           control={control}
-          render={({ field }) => (
-            <TextField
-              {...field}
-              id="lastName"
-              label="Last Name"
-              placeholder="Enter your last name"
-              required
-              fullWidth
-              error={!!errors.lastName}
-              helperText={errors.lastName?.message}
-            />
-          )}
+          label="Last Name"
+          placeholder="Enter your last name"
+          required
         />
 
-        <Controller
+        <FormTextField<IdentificationFormData>
           name="email"
           control={control}
-          render={({ field }) => (
-            <TextField
-              {...field}
-              id="email"
-              label="Email Address"
-              placeholder="your.email@example.com"
-              type="email"
-              required
-              fullWidth
-              error={!!errors.email}
-              helperText={errors.email?.message}
-            />
-          )}
+          label="Email Address"
+          placeholder="your.email@example.com"
+          type="email"
+          required
         />
       </Stack>
 
