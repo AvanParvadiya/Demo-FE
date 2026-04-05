@@ -137,6 +137,7 @@ export default function RegisterPage() {
         }}
       >
         <Container maxWidth="sm" disableGutters sx={{ px: { xs: 2, sm: 0 } }}>
+          <StepperHeader activeStep={activeStep} />
           <Paper
             elevation={0}
             sx={{
@@ -146,7 +147,6 @@ export default function RegisterPage() {
               borderColor: "grey.200",
             }}
           >
-            <StepperHeader activeStep={activeStep} />
 
             {activeStep === 0 && (
               <IdentificationStep
