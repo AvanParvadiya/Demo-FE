@@ -3,15 +3,13 @@ import {
   FormSelect,
   LoadingButton,
 } from "@/components/common";
+import { useProfileStep } from "@/hooks/registration/useProfileStep";
 import {
-  AUDIT_SECTOR_MAPPING,
   AUDIT_SECTORS,
   CertificationFormData,
   JURISDICTIONS,
   ProfileFormData,
-  profileSchema,
 } from "@/schemas/registration";
-import { zodResolver } from "@hookform/resolvers/zod";
 import AddIcon from "@mui/icons-material/Add";
 import {
   Alert,
@@ -23,24 +21,28 @@ import {
   FormHelperText,
   Paper,
   Stack,
-  Typography
+  Typography,
 } from "@mui/material";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller } from "react-hook-form";
 import AddCertificationDialog from "./AddCertificationDialog";
 import CertificationItem from "./CertificationItem";
 
 interface ProfileStepProps {
+  /** Form values previously entered to support 'Back' navigation */
   defaultValues: Partial<ProfileFormData>;
+  /** External state management for certifications (since they are dynamic) */
   certifications: CertificationFormData[];
+  /** Callback to update parent state when certifications are added/edited/removed */
   onCertificationsChange: (certs: CertificationFormData[]) => void;
+  /** Final completion callback */
   onNext: (data: ProfileFormData) => void;
+  /** Return to Step 1 (Verification) */
   onBack: () => void;
+  /** Loading state for the final registration API call */
   loading?: boolean;
+  /** Error message from the backend if registration fails */
   error?: string | null;
 }
-
-
 
 /**
  * Step 2: Auditor Profile Completion
@@ -55,66 +57,29 @@ export default function ProfileStep({
   loading = false,
   error = null,
 }: ProfileStepProps) {
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
-
+  // Use custom hook for complex profile logic
   const {
     control,
     handleSubmit,
-    watch,
-    setValue,
-    formState: { errors },
-  } = useForm<ProfileFormData>({
-    resolver: zodResolver(profileSchema),
-    defaultValues: {
-      primaryAuditSector: "",
-      specializedAuditArea: "",
-      jurisdictions: [],
-      independenceDeclaration: false as unknown as true,
-      ...defaultValues,
-    },
+    errors,
+    specializedAreaOptions,
+    dialogOpen,
+    setDialogOpen,
+    editingIndex,
+    handleOpenAdd,
+    handleOpenEdit,
+    handleRemove,
+    handleSave,
+    selectedSector,
+  } = useProfileStep({
+    defaultValues,
+    certifications,
+    onCertificationsChange,
+    onSuccess: onNext,
   });
 
-  const selectedSector = watch("primaryAuditSector");
-
-  const specializedAreaOptions = useMemo(() => {
-    if (!selectedSector) return [];
-    return AUDIT_SECTOR_MAPPING[selectedSector] || [];
-  }, [selectedSector]);
-
-  useEffect(() => {
-    // Prevent state-reset loops by only resetting if a value actually exists
-    setValue("specializedAuditArea", "");
-  }, [selectedSector, setValue]);
-
-  // --- Handlers ---
-
-  const handleOpenAdd = useCallback(() => {
-    setEditingIndex(null);
-    setDialogOpen(true);
-  }, []);
-
-  const handleOpenEdit = useCallback((index: number) => {
-    setEditingIndex(index);
-    setDialogOpen(true);
-  }, []);
-
-  const handleRemove = useCallback((index: number) => {
-    onCertificationsChange(certifications.filter((_, i) => i !== index));
-  }, [certifications, onCertificationsChange]);
-
-  const handleSave = useCallback((cert: CertificationFormData) => {
-    if (editingIndex !== null) {
-      const updated = [...certifications];
-      updated[editingIndex] = cert;
-      onCertificationsChange(updated);
-    } else {
-      onCertificationsChange([...certifications, cert]);
-    }
-  }, [certifications, editingIndex, onCertificationsChange]);
-
   return (
-    <Box component="form" onSubmit={handleSubmit(onNext)} noValidate>
+    <Box component="form" onSubmit={handleSubmit} noValidate>
       {/* Header */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="h5" fontWeight={800} gutterBottom sx={{ letterSpacing: "-0.02em" }}>

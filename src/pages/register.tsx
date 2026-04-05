@@ -1,6 +1,5 @@
 import { Box, Container, Fade, Paper } from "@mui/material";
 import Head from "next/head";
-import { useCallback, useState } from "react";
 
 // Components
 import IdentificationStep from "@/components/registration/IdentificationStep";
@@ -10,89 +9,29 @@ import StepperHeader from "@/components/registration/StepperHeader";
 import VerificationStep from "@/components/registration/VerificationStep";
 
 // Types & Hooks
-import { useApiMutation } from "@/hooks";
-import { API_ENDPOINTS } from "@/lib";
-import type {
-  CertificationFormData,
-  IdentificationFormData,
-  ProfileFormData,
-  RegistrationData,
-  VerificationFormData,
-} from "@/schemas/registration";
+import { useRegistration } from "@/hooks/registration/useRegistration";
 
 /**
  * RegisterPage Component
  * Orchestrates the multi-step registration wizard for new auditors.
- * Steps:
- * 0. Identification (Basic Info + OTP Sent)
- * 1. Verification (OTP Validation)
- * 2. Profile Setup (Sectors, Jurisdictions & Certifications)
- * 3. Success (Post-onboarding acknowledgement)
+ * Logic is moved to useRegistration hook for maintainability.
  */
 export default function RegisterPage() {
-  const [activeStep, setActiveStep] = useState(0);
-
-  // --- API Mutation ---
   const {
-    mutate: register,
-    loading: registering,
-    error: registrationError,
-  } = useApiMutation<RegistrationData, any>("post", API_ENDPOINTS.USERS.REGISTER);
-
-  // --- Wizard State ---
-  const [identification, setIdentification] = useState<Partial<IdentificationFormData>>({});
-  const [certifications, setCertifications] = useState<CertificationFormData[]>([]);
-  const [profile, setProfile] = useState<Partial<ProfileFormData>>({});
-  const [otp, setOtp] = useState("");
-
-  // --- Navigation Handlers ---
-
-  /** Step 0 -> 1: Identification complete, OTP sent to email */
-  const handleStep1Submit = useCallback(
-    (data: IdentificationFormData, otpCode: string) => {
-      setIdentification(data);
-      setOtp(otpCode);
-      setActiveStep(1);
-    },
-    []
-  );
-
-  /** Step 1 -> 2: Email verified via OTP */
-  const handleStep2Submit = useCallback((data: VerificationFormData) => {
-    setOtp(data.otp);
-    setActiveStep(2);
-  }, []);
-
-  /** Step 2 -> Final: Submit entire registration payload */
-  const handleFinalSubmit = useCallback(
-    async (profileData: ProfileFormData) => {
-      setProfile(profileData);
-
-      // Construct the comprehensive registration object
-      const payload: RegistrationData = {
-        firstName: identification.firstName ?? "",
-        lastName: identification.lastName ?? "",
-        email: identification.email ?? "",
-        otp: otp,
-        ...profileData,
-        certifications,
-      };
-
-      const success = await register(payload);
-      if (success) {
-        // Move to step 3 instead of redirecting immediately
-        setActiveStep(3);
-      }
-    },
-    [identification, certifications, otp, register]
-  );
-
-  /** Generic handler to return to previous step */
-  const handleBack = useCallback(() => {
-    setActiveStep((prev) => prev - 1);
-  }, []);
-
-  const isSuccessStep = activeStep === 3;
+    activeStep,
+    identification,
+    certifications,
+    setCertifications,
+    profile,
+    otp,
+    registering,
+    registrationError,
+    isSuccessStep,
+    handleStep1Submit,
+    handleStep2Submit,
+    handleFinalSubmit,
+    handleBack,
+  } = useRegistration();
 
   return (
     <>
