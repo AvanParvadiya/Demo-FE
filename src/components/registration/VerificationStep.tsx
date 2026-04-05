@@ -1,43 +1,57 @@
-import { useState, useEffect, useCallback } from "react";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
-import Stack from "@mui/material/Stack";
-import Alert from "@mui/material/Alert";
-import MailOutlineIcon from "@mui/icons-material/MailOutline";
+import { LoadingButton } from "@/components/common";
+import { apiClient } from "@/lib";
+import { getErrorMessage } from "@/lib/apiTypes";
 import {
-  verificationSchema,
   VerificationFormData,
+  verificationSchema,
 } from "@/schemas/registration";
+import { zodResolver } from "@hookform/resolvers/zod";
+import MailOutlineIcon from "@mui/icons-material/MailOutline";
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
+import { useCallback, useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import OtpInput from "./OtpInput";
 
-const TEST_OTP = "123456";
 const RESEND_COOLDOWN = 60; // seconds
 
 interface VerificationStepProps {
   email: string;
+  /** OTP code returned from backend (for testing display) */
+  otpCode: string;
   onNext: (data: VerificationFormData) => void;
   onBack: () => void;
 }
 
 export default function VerificationStep({
   email,
+  otpCode,
   onNext,
   onBack,
 }: VerificationStepProps) {
   const [countdown, setCountdown] = useState(RESEND_COOLDOWN);
   const [otpError, setOtpError] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [displayOtp, setDisplayOtp] = useState(otpCode);
 
   const {
     control,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<VerificationFormData>({
     resolver: zodResolver(verificationSchema),
     defaultValues: { otp: "" },
   });
+
+  // Watch OTP value to enable/disable Verify button
+  const otpValue = watch("otp");
+  const isOtpComplete = otpValue?.length === 6;
 
   // Countdown timer for resend
   useEffect(() => {
@@ -48,18 +62,38 @@ export default function VerificationStep({
     return () => clearInterval(timer);
   }, [countdown]);
 
+  const sendOtpRequest = useCallback(async () => {
+    setSending(true);
+    try {
+      const response = await apiClient.post("/v0/otp/send", { email });
+      setDisplayOtp(response.data.otp);
+    } catch (err) {
+      console.error("Failed to send OTP:", getErrorMessage(err));
+    } finally {
+      setSending(false);
+    }
+  }, [email]);
+
   const handleResend = useCallback(() => {
     setCountdown(RESEND_COOLDOWN);
     setOtpError("");
-  }, []);
+    sendOtpRequest();
+  }, [sendOtpRequest]);
 
-  const onSubmit = (data: VerificationFormData) => {
-    if (data.otp !== TEST_OTP) {
-      setOtpError("Invalid OTP. Please try again.");
-      return;
-    }
+  const onSubmit = async (data: VerificationFormData) => {
+    setVerifying(true);
     setOtpError("");
-    onNext(data);
+    try {
+      await apiClient.post("http://localhost:3001/v0/otp/verify", {
+        email,
+        otp: data.otp,
+      });
+      onNext(data);
+    } catch (err) {
+      setOtpError(getErrorMessage(err));
+    } finally {
+      setVerifying(false);
+    }
   };
 
   return (
@@ -92,7 +126,16 @@ export default function VerificationStep({
         </Typography>
 
         <Alert severity="info" sx={{ width: "100%", borderRadius: 2 }}>
-          For testing, use code: <strong>{TEST_OTP}</strong>
+          {sending ? (
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <CircularProgress size={16} />
+              <span>Sending new OTP…</span>
+            </Stack>
+          ) : (
+            <>
+              For testing, use code: <strong>{displayOtp}</strong>
+            </>
+          )}
         </Alert>
       </Stack>
 
@@ -126,10 +169,13 @@ export default function VerificationStep({
             component="span"
             variant="body2"
             color="primary"
-            sx={{ cursor: "pointer", fontWeight: 600 }}
-            onClick={handleResend}
+            sx={{
+              cursor: sending ? "default" : "pointer",
+              fontWeight: 600,
+            }}
+            onClick={sending ? undefined : handleResend}
           >
-            Resend OTP
+            {sending ? "Sending…" : "Resend OTP"}
           </Typography>
         )}
       </Typography>
@@ -140,19 +186,23 @@ export default function VerificationStep({
           size="large"
           fullWidth
           onClick={onBack}
+          disabled={verifying}
           sx={{ py: 1.4, fontSize: "1rem", fontWeight: 600 }}
         >
           Back
         </Button>
-        <Button
+        <LoadingButton
           type="submit"
           variant="contained"
           size="large"
           fullWidth
+          loading={verifying}
+          loadingText="Verifying…"
+          disabled={!isOtpComplete}
           sx={{ py: 1.4, fontSize: "1rem", fontWeight: 600 }}
         >
           Verify
-        </Button>
+        </LoadingButton>
       </Stack>
     </Box>
   );

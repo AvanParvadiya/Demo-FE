@@ -28,12 +28,17 @@ export default function RegisterPage() {
   const [profileDefaults, setProfileDefaults] = useState<
     Partial<ProfileFormData>
   >({});
+  const [otpCode, setOtpCode] = useState("");
 
   // --- Step handlers ---
-  const handleStep1Next = useCallback((data: IdentificationFormData) => {
-    setIdentificationData(data);
-    setActiveStep(1);
-  }, []);
+  const handleStep1Next = useCallback(
+    (data: IdentificationFormData, otp: string) => {
+      setIdentificationData(data);
+      setOtpCode(otp);
+      setActiveStep(1);
+    },
+    []
+  );
 
   const handleStep2Next = useCallback((_data: VerificationFormData) => {
     setActiveStep(2);
@@ -158,6 +163,7 @@ export default function RegisterPage() {
             {activeStep === 1 && (
               <VerificationStep
                 email={identificationData.email ?? ""}
+                otpCode={otpCode}
                 onNext={handleStep2Next}
                 onBack={handleBack}
               />
