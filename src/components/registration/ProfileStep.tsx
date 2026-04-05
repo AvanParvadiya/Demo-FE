@@ -13,26 +13,22 @@ import {
 } from "@/schemas/registration";
 import { zodResolver } from "@hookform/resolvers/zod";
 import AddIcon from "@mui/icons-material/Add";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import EditIcon from "@mui/icons-material/Edit";
 import {
   Alert,
   Box,
   Button,
   Checkbox,
-  Chip,
   FormControl,
   FormControlLabel,
   FormHelperText,
-  IconButton,
   Paper,
   Stack,
-  Tooltip,
-  Typography,
+  Typography
 } from "@mui/material";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import AddCertificationDialog from "./AddCertificationDialog";
+import CertificationItem from "./CertificationItem";
 
 interface ProfileStepProps {
   defaultValues: Partial<ProfileFormData>;
@@ -44,67 +40,7 @@ interface ProfileStepProps {
   error?: string | null;
 }
 
-// --- Sub-components ---
 
-/**
- * Renders a single certification entry with edit/delete actions
- */
-const CertificationItem = ({
-  cert,
-  onEdit,
-  onRemove,
-  disabled,
-}: {
-  cert: CertificationFormData;
-  onEdit: () => void;
-  onRemove: () => void;
-  disabled: boolean;
-}) => (
-  <Stack
-    direction="row"
-    alignItems="center"
-    justifyContent="space-between"
-    sx={{
-      py: 1.5,
-      px: 2,
-      bgcolor: "#fff",
-      borderRadius: 2,
-      border: "1px solid",
-      borderColor: "grey.200",
-      transition: "border-color 0.2s",
-      "&:hover": { borderColor: "primary.light" },
-    }}
-  >
-    <Stack spacing={0.5}>
-      <Stack direction="row" spacing={1} alignItems="center">
-        <Chip
-          label={cert.type}
-          color="primary"
-          size="small"
-          sx={{ fontWeight: 800, borderRadius: 1 }}
-        />
-        <Typography variant="body2" fontWeight={700}>
-          {cert.licenseNumber}
-        </Typography>
-      </Stack>
-      <Typography variant="caption" color="text.secondary" fontWeight={500}>
-        Year: {cert.year}
-      </Typography>
-    </Stack>
-    <Stack direction="row" spacing={0.5}>
-      <Tooltip title="Edit" arrow>
-        <IconButton size="small" color="primary" onClick={onEdit} disabled={disabled}>
-          <EditIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
-      <Tooltip title="Remove" arrow>
-        <IconButton size="small" color="error" onClick={onRemove} disabled={disabled}>
-          <DeleteOutlineIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
-    </Stack>
-  </Stack>
-);
 
 /**
  * Step 2: Auditor Profile Completion

@@ -1,13 +1,13 @@
-import Stepper from "@mui/material/Stepper";
+import { STEP_LABELS } from "@/schemas/registration";
+import Box from "@mui/material/Box";
 import Step from "@mui/material/Step";
-import StepLabel from "@mui/material/StepLabel";
 import StepConnector, {
   stepConnectorClasses,
 } from "@mui/material/StepConnector";
 import { StepIconProps } from "@mui/material/StepIcon";
-import Box from "@mui/material/Box";
+import StepLabel from "@mui/material/StepLabel";
+import Stepper from "@mui/material/Stepper";
 import { styled } from "@mui/material/styles";
-import { STEP_LABELS } from "@/schemas/registration";
 
 // Custom connector line between steps
 const CustomConnector = styled(StepConnector)(({ theme }) => ({
