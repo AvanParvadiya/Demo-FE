@@ -9,9 +9,10 @@ const API_VERSION = "/v0";
 export const API_ENDPOINTS = {
   // ── OTP ────────────────────────────────────────────────────────────
   OTP: {
-    SEND: `${API_VERSION}/otp/send`,
-    VERIFY: `${API_VERSION}/otp/verify`,
+    SEND: `${API_VERSION}/users/send-otp`,
+    VERIFY: `${API_VERSION}/users/verify-otp`,
   },
+
 
   // ── Users ──────────────────────────────────────────────────────────
   USERS: {
