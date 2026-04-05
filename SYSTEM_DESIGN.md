@@ -1,4 +1,4 @@
-# System Design: Scaling the Audit FIS Platform
+# System Design: Scaling the Audit FIS Platform Guideline
 
 ## Current State & Bottlenecks
 Right now, Code is running as a classic **monolith**. We've got a single NestJS backend handling everything: registration flow, OTP generation, and the auditor directory. It's backed by a single PostgreSQL instance. 
