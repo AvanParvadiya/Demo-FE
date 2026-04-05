@@ -1,17 +1,22 @@
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import Stack from "@mui/material/Stack";
-import Alert from "@mui/material/Alert";
 import { FormTextField, LoadingButton } from "@/components/common";
+import { useApiMutation } from "@/hooks";
+import { API_ENDPOINTS } from "@/lib";
 import {
-  identificationSchema,
   IdentificationFormData,
+  identificationSchema,
 } from "@/schemas/registration";
-import { apiClient } from "@/lib";
-import { getErrorMessage } from "@/lib/apiTypes";
+import { zodResolver } from "@hookform/resolvers/zod";
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
+import { useForm } from "react-hook-form";
+
+interface SendOtpResponse {
+  message: string;
+  otp: string;
+  expiresInSeconds: number;
+}
 
 interface IdentificationStepProps {
   defaultValues: Partial<IdentificationFormData>;
@@ -22,8 +27,10 @@ export default function IdentificationStep({
   defaultValues,
   onNext,
 }: IdentificationStepProps) {
-  const [loading, setLoading] = useState(false);
-  const [apiError, setApiError] = useState("");
+  const { mutate: sendOtp, loading, error } = useApiMutation<
+    { email: string },
+    SendOtpResponse
+  >("post", API_ENDPOINTS.OTP.SEND);
 
   const { control, handleSubmit } = useForm<IdentificationFormData>({
     resolver: zodResolver(identificationSchema),
@@ -36,18 +43,9 @@ export default function IdentificationStep({
   });
 
   const onSubmit = async (data: IdentificationFormData) => {
-    setLoading(true);
-    setApiError("");
-    try {
-      const response = await apiClient.post("http://localhost:3001/v0/otp/send", {
-        email: data.email,
-      });
-      // Pass the OTP code (for testing display on Step 2)
-      onNext(data, response.data.otp);
-    } catch (err) {
-      setApiError(getErrorMessage(err));
-    } finally {
-      setLoading(false);
+    const result = await sendOtp({ email: data.email });
+    if (result) {
+      onNext(data, result.otp);
     }
   };
 
@@ -60,9 +58,9 @@ export default function IdentificationStep({
         Please provide your primary identity information
       </Typography>
 
-      {apiError && (
+      {error && (
         <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
-          {apiError}
+          {error}
         </Alert>
       )}
 

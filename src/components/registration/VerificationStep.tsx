@@ -1,6 +1,6 @@
 import { LoadingButton } from "@/components/common";
-import { apiClient } from "@/lib";
-import { getErrorMessage } from "@/lib/apiTypes";
+import { useApiMutation } from "@/hooks";
+import { API_ENDPOINTS } from "@/lib";
 import {
   VerificationFormData,
   verificationSchema,
@@ -19,6 +19,17 @@ import OtpInput from "./OtpInput";
 
 const RESEND_COOLDOWN = 60; // seconds
 
+interface SendOtpResponse {
+  message: string;
+  otp: string;
+  expiresInSeconds: number;
+}
+
+interface VerifyOtpResponse {
+  message: string;
+  verified: boolean;
+}
+
 interface VerificationStepProps {
   email: string;
   /** OTP code returned from backend (for testing display) */
@@ -34,10 +45,26 @@ export default function VerificationStep({
   onBack,
 }: VerificationStepProps) {
   const [countdown, setCountdown] = useState(RESEND_COOLDOWN);
-  const [otpError, setOtpError] = useState("");
-  const [verifying, setVerifying] = useState(false);
-  const [sending, setSending] = useState(false);
   const [displayOtp, setDisplayOtp] = useState(otpCode);
+
+  // Hook for resending OTP
+  const {
+    mutate: sendOtp,
+    loading: sending,
+  } = useApiMutation<{ email: string }, SendOtpResponse>(
+    "post",
+    API_ENDPOINTS.OTP.SEND
+  );
+
+  // Hook for verifying OTP
+  const {
+    mutate: verifyOtp,
+    loading: verifying,
+    error: verifyError,
+  } = useApiMutation<{ email: string; otp: string }, VerifyOtpResponse>(
+    "post",
+    API_ENDPOINTS.OTP.VERIFY
+  );
 
   const {
     control,
@@ -62,37 +89,18 @@ export default function VerificationStep({
     return () => clearInterval(timer);
   }, [countdown]);
 
-  const sendOtpRequest = useCallback(async () => {
-    setSending(true);
-    try {
-      const response = await apiClient.post("/v0/otp/send", { email });
-      setDisplayOtp(response.data.otp);
-    } catch (err) {
-      console.error("Failed to send OTP:", getErrorMessage(err));
-    } finally {
-      setSending(false);
-    }
-  }, [email]);
-
-  const handleResend = useCallback(() => {
+  const handleResend = useCallback(async () => {
     setCountdown(RESEND_COOLDOWN);
-    setOtpError("");
-    sendOtpRequest();
-  }, [sendOtpRequest]);
+    const result = await sendOtp({ email });
+    if (result) {
+      setDisplayOtp(result.otp);
+    }
+  }, [sendOtp, email]);
 
   const onSubmit = async (data: VerificationFormData) => {
-    setVerifying(true);
-    setOtpError("");
-    try {
-      await apiClient.post("http://localhost:3001/v0/otp/verify", {
-        email,
-        otp: data.otp,
-      });
+    const result = await verifyOtp({ email, otp: data.otp });
+    if (result?.verified) {
       onNext(data);
-    } catch (err) {
-      setOtpError(getErrorMessage(err));
-    } finally {
-      setVerifying(false);
     }
   };
 
@@ -146,8 +154,8 @@ export default function VerificationStep({
           <OtpInput
             value={field.value}
             onChange={field.onChange}
-            error={!!errors.otp || !!otpError}
-            helperText={errors.otp?.message || otpError}
+            error={!!errors.otp || !!verifyError}
+            helperText={errors.otp?.message || verifyError || ""}
           />
         )}
       />
