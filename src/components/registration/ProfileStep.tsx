@@ -374,7 +374,7 @@ export default function ProfileStep({
         </Paper>
       </Stack>
 
-      <Stack direction="row" spacing={2} sx={{ mt: 5 }}>
+      <Stack direction={{ xs: "column-reverse", sm: "row" }} spacing={2} sx={{ mt: 5 }}>
         <Button
           variant="outlined"
           size="large"
@@ -409,6 +409,7 @@ export default function ProfileStep({
           Complete Registration
         </Button>
       </Stack>
+
     </Box>
   );
 }

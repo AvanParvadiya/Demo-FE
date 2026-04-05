@@ -192,7 +192,7 @@ export default function VerificationStep({
         )}
       </Typography>
 
-      <Stack direction="row" spacing={2} sx={{ mt: 4 }}>
+      <Stack direction={{ xs: "column-reverse", sm: "row" }} spacing={2} sx={{ mt: 4 }}>
         <Button
           variant="outlined"
           size="large"
@@ -216,6 +216,7 @@ export default function VerificationStep({
           Verify
         </LoadingButton>
       </Stack>
+
     </Box>
   );
 }
