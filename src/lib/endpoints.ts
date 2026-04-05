@@ -22,9 +22,4 @@ export const API_ENDPOINTS = {
     REGISTER: `${API_VERSION}/users/register`,
   },
 
-  // ── Audit ──────────────────────────────────────────────────────────
-  AUDIT: {
-    LIST: `${API_VERSION}/audit`,
-    DETAIL: (id: string | number) => `${API_VERSION}/audit/${id}`,
-  },
 } as const;
