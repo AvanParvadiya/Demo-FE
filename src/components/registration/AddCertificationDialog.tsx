@@ -1,7 +1,8 @@
+import { FormSelect, FormTextField } from "@/components/common";
 import {
+  CERTIFICATION_TYPES,
   CertificationFormData,
   certificationSchema,
-  CERTIFICATION_TYPES,
 } from "@/schemas/registration";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Button from "@mui/material/Button";
@@ -10,33 +11,46 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import Stack from "@mui/material/Stack";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { FormTextField, FormSelect } from "@/components/common";
 
 interface AddCertificationDialogProps {
   open: boolean;
   onClose: () => void;
-  onAdd: (certification: CertificationFormData) => void;
+  onSave: (certification: CertificationFormData) => void;
+  initialData?: CertificationFormData | null;
 }
 
 export default function AddCertificationDialog({
   open,
   onClose,
-  onAdd,
+  onSave,
+  initialData,
 }: AddCertificationDialogProps) {
+  const isEditing = !!initialData;
+
   const { control, handleSubmit, reset } = useForm<CertificationFormData>({
     resolver: zodResolver(certificationSchema),
     defaultValues: { type: "", licenseNumber: "", year: "" },
   });
 
-  const onSubmit = (data: CertificationFormData) => {
-    onAdd(data);
-    reset();
+  // Sync initialData with the form when the dialog opens
+  useEffect(() => {
+    if (open) {
+      if (initialData) {
+        reset(initialData);
+      } else {
+        reset({ type: "", licenseNumber: "", year: "" });
+      }
+    }
+  }, [open, initialData, reset]);
+
+  const onFormSubmit = (data: CertificationFormData) => {
+    onSave(data);
     onClose();
   };
 
   const handleClose = () => {
-    reset();
     onClose();
   };
 
@@ -49,7 +63,7 @@ export default function AddCertificationDialog({
       PaperProps={{ sx: { borderRadius: 3 } }}
     >
       <DialogTitle sx={{ fontWeight: 700, fontSize: "1.2rem" }}>
-        Add Certification
+        {isEditing ? "Edit Certification" : "Add Certification"}
       </DialogTitle>
 
       <DialogContent>
@@ -88,11 +102,12 @@ export default function AddCertificationDialog({
         <Button onClick={handleClose} variant="outlined">
           Cancel
         </Button>
-        <Button onClick={handleSubmit(onSubmit)} variant="contained">
-          Add Certification
+        <Button onClick={handleSubmit(onFormSubmit)} variant="contained">
+          {isEditing ? "Update Certification" : "Add Certification"}
         </Button>
       </DialogActions>
     </Dialog>
   );
 }
+
 

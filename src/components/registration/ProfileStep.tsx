@@ -10,6 +10,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import EditIcon from "@mui/icons-material/Edit";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
@@ -20,6 +21,7 @@ import FormHelperText from "@mui/material/FormHelperText";
 import IconButton from "@mui/material/IconButton";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
+import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -41,6 +43,7 @@ export default function ProfileStep({
   onBack,
 }: ProfileStepProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
   const {
     control,
@@ -72,8 +75,24 @@ export default function ProfileStep({
     setValue("specializedAuditArea", "");
   }, [selectedSector, setValue]);
 
-  const handleAddCertification = (cert: CertificationFormData) => {
-    onCertificationsChange([...certifications, cert]);
+  const handleOpenAddDialog = () => {
+    setEditingIndex(null);
+    setDialogOpen(true);
+  };
+
+  const handleOpenEditDialog = (index: number) => {
+    setEditingIndex(index);
+    setDialogOpen(true);
+  };
+
+  const handleSaveCertification = (cert: CertificationFormData) => {
+    if (editingIndex !== null) {
+      const updated = [...certifications];
+      updated[editingIndex] = cert;
+      onCertificationsChange(updated);
+    } else {
+      onCertificationsChange([...certifications, cert]);
+    }
   };
 
   const handleRemoveCertification = (index: number) => {
@@ -115,7 +134,7 @@ export default function ProfileStep({
             variant="contained"
             size="small"
             startIcon={<AddIcon />}
-            onClick={() => setDialogOpen(true)}
+            onClick={handleOpenAddDialog}
             sx={{
               textTransform: "none",
               borderRadius: 2,
@@ -176,15 +195,28 @@ export default function ProfileStep({
                     Qualified in {cert.year}
                   </Typography>
                 </Stack>
-                <IconButton
-                  size="small"
-                  color="error"
-                  onClick={() => handleRemoveCertification(index)}
-                  aria-label={`Remove certification ${index + 1}`}
-                  sx={{ bgcolor: "error.50", "&:hover": { bgcolor: "error.100" } }}
-                >
-                  <DeleteOutlineIcon fontSize="small" />
-                </IconButton>
+                <Stack direction="row" spacing={0.5}>
+                  <Tooltip title="Edit Certification" arrow>
+                    <IconButton
+                      size="small"
+                      color="primary"
+                      onClick={() => handleOpenEditDialog(index)}
+                      sx={{ bgcolor: "primary.50", "&:hover": { bgcolor: "primary.100" } }}
+                    >
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Delete Certification" arrow>
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={() => handleRemoveCertification(index)}
+                      sx={{ bgcolor: "error.50", "&:hover": { bgcolor: "error.100" } }}
+                    >
+                      <DeleteOutlineIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </Stack>
               </Stack>
             ))}
           </Stack>
@@ -193,8 +225,9 @@ export default function ProfileStep({
 
       <AddCertificationDialog
         open={dialogOpen}
+        initialData={editingIndex !== null ? certifications[editingIndex] : null}
         onClose={() => setDialogOpen(false)}
-        onAdd={handleAddCertification}
+        onSave={handleSaveCertification}
       />
 
       <Stack spacing={3.5}>
