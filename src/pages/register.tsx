@@ -40,7 +40,8 @@ export default function RegisterPage() {
     []
   );
 
-  const handleStep2Next = useCallback((_data: VerificationFormData) => {
+  const handleStep2Next = useCallback((data: VerificationFormData) => {
+    setOtpCode(data.otp);
     setActiveStep(2);
   }, []);
 
@@ -52,10 +53,11 @@ export default function RegisterPage() {
         firstName: identificationData.firstName ?? "",
         lastName: identificationData.lastName ?? "",
         email: identificationData.email ?? "",
-        otp: "",
+        otp: otpCode,
         ...data,
         certifications,
       };
+
 
       // TODO: Submit to API
       console.log("Registration complete:", finalData);

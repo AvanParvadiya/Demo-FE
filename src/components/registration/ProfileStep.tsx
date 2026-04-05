@@ -1,10 +1,11 @@
+import { FormCheckbox, FormSelect } from "@/components/common";
 import {
+  AUDIT_SECTOR_MAPPING,
   AUDIT_SECTORS,
   CertificationFormData,
   JURISDICTIONS,
   ProfileFormData,
   profileSchema,
-  SPECIALIZED_AREAS,
 } from "@/schemas/registration";
 import { zodResolver } from "@hookform/resolvers/zod";
 import AddIcon from "@mui/icons-material/Add";
@@ -20,10 +21,8 @@ import IconButton from "@mui/material/IconButton";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { FormSelect, FormCheckbox } from "@/components/common";
-import type { SelectOption } from "@/components/common";
 import AddCertificationDialog from "./AddCertificationDialog";
 
 interface ProfileStepProps {
@@ -33,17 +32,6 @@ interface ProfileStepProps {
   onNext: (data: ProfileFormData) => void;
   onBack: () => void;
 }
-
-// Map constants to SelectOption format for FormSelect
-const auditSectorOptions: SelectOption[] = AUDIT_SECTORS.map((s) => ({
-  label: s,
-  value: s,
-}));
-
-const specializedAreaOptions: SelectOption[] = SPECIALIZED_AREAS.map((a) => ({
-  label: a,
-  value: a,
-}));
 
 export default function ProfileStep({
   defaultValues,
@@ -57,6 +45,8 @@ export default function ProfileStep({
   const {
     control,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -68,6 +58,19 @@ export default function ProfileStep({
       ...defaultValues,
     },
   });
+
+  const selectedSector = watch("primaryAuditSector");
+
+  // Get sub-sectors based on selected primary sector
+  const specializedAreaOptions = useMemo(() => {
+    if (!selectedSector) return [];
+    return AUDIT_SECTOR_MAPPING[selectedSector] || [];
+  }, [selectedSector]);
+
+  // Reset specialized area when sector changes
+  useEffect(() => {
+    setValue("specializedAuditArea", "");
+  }, [selectedSector, setValue]);
 
   const handleAddCertification = (cert: CertificationFormData) => {
     onCertificationsChange([...certifications, cert]);
@@ -83,43 +86,65 @@ export default function ProfileStep({
         Auditor Profile Completion
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3.5 }}>
-        Please provide your professional audit credentials
+        Please provide your professional audit specialization and credentials
       </Typography>
 
-      {/* --- Certifications --- */}
+      {/* --- A. Professional Certifications --- */}
       <Paper
         variant="outlined"
         sx={{
           p: 2.5,
-          mb: 3,
-          borderRadius: 2,
+          mb: 3.5,
+          borderRadius: 3,
           borderColor: "grey.300",
+          bgcolor: "grey.50",
         }}
       >
         <Stack
           direction="row"
           justifyContent="space-between"
           alignItems="center"
-          sx={{ mb: 1.5 }}
+          sx={{ mb: 2 }}
         >
-          <Typography fontWeight={600}>Professional Certifications</Typography>
+          <Box>
+            <Typography variant="body1" fontWeight={700}>
+              Professional Certifications
+            </Typography>
+          </Box>
           <Button
             variant="contained"
             size="small"
             startIcon={<AddIcon />}
             onClick={() => setDialogOpen(true)}
-            sx={{ textTransform: "none" }}
+            sx={{
+              textTransform: "none",
+              borderRadius: 2,
+              px: 2,
+              boxShadow: "none",
+              "&:hover": { boxShadow: "none" },
+            }}
           >
             Add Certification
           </Button>
         </Stack>
 
         {certifications.length === 0 ? (
-          <Typography variant="body2" color="text.secondary">
-            No certifications added yet
-          </Typography>
+          <Box
+            sx={{
+              p: 3,
+              border: "1px dashed",
+              borderColor: "grey.400",
+              borderRadius: 2,
+              textAlign: "center",
+              bgcolor: "#fff",
+            }}
+          >
+            <Typography variant="body2" color="text.secondary">
+              No certifications added yet.
+            </Typography>
+          </Box>
         ) : (
-          <Stack spacing={1}>
+          <Stack spacing={1.5}>
             {certifications.map((cert, index) => (
               <Stack
                 key={index}
@@ -127,28 +152,36 @@ export default function ProfileStep({
                 alignItems="center"
                 justifyContent="space-between"
                 sx={{
-                  py: 1,
-                  px: 1.5,
-                  bgcolor: "grey.50",
-                  borderRadius: 1.5,
+                  py: 1.5,
+                  px: 2,
+                  bgcolor: "#fff",
+                  borderRadius: 2,
+                  border: "1px solid",
+                  borderColor: "grey.200",
                 }}
               >
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <Chip
-                    label={cert.name}
-                    color="primary"
-                    size="small"
-                    variant="outlined"
-                  />
-                  <Typography variant="body2" color="text.secondary">
-                    {cert.issuingBody} &middot; {cert.year}
+                <Stack spacing={0.5}>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Chip
+                      label={cert.type}
+                      color="primary"
+                      size="small"
+                      sx={{ fontWeight: 700, borderRadius: 1 }}
+                    />
+                    <Typography variant="body2" fontWeight={600}>
+                      License: {cert.licenseNumber}
+                    </Typography>
+                  </Stack>
+                  <Typography variant="caption" color="text.secondary">
+                    Qualified in {cert.year}
                   </Typography>
                 </Stack>
                 <IconButton
                   size="small"
                   color="error"
                   onClick={() => handleRemoveCertification(index)}
-                  aria-label={`Remove ${cert.name}`}
+                  aria-label={`Remove certification ${index + 1}`}
+                  sx={{ bgcolor: "error.50", "&:hover": { bgcolor: "error.100" } }}
                 >
                   <DeleteOutlineIcon fontSize="small" />
                 </IconButton>
@@ -164,117 +197,134 @@ export default function ProfileStep({
         onAdd={handleAddCertification}
       />
 
-      <Stack spacing={3}>
-        {/* --- Primary Audit Sector (using FormSelect) --- */}
-        <FormSelect<ProfileFormData>
-          name="primaryAuditSector"
-          control={control}
-          label="Primary Audit Sector"
-          required
-          options={auditSectorOptions}
-          placeholder="Select sector"
-        />
+      <Stack spacing={3.5}>
+        {/* --- B. Audit Specialization --- */}
+        <Stack spacing={2}>
+          <FormSelect<ProfileFormData>
+            name="primaryAuditSector"
+            control={control}
+            label="Primary Audit Sector"
+            required
+            options={AUDIT_SECTORS}
+            placeholder="Select primary sector"
+          />
 
-        {/* --- Specialized Audit Area (using FormSelect) --- */}
-        <FormSelect<ProfileFormData>
-          name="specializedAuditArea"
-          control={control}
-          label="Specialized Audit Area"
-          options={[
-            { label: "None", value: "" },
-            ...specializedAreaOptions,
-          ]}
-        />
+          <FormSelect<ProfileFormData>
+            name="specializedAuditArea"
+            control={control}
+            label="Specialized Audit Area"
+            required
+            options={specializedAreaOptions}
+            disabled={!selectedSector}
+            placeholder={
+              !selectedSector
+                ? "Select a sector first"
+                : "Select specialization"
+            }
+          />
+        </Stack>
 
-        {/* --- Jurisdictions (checkbox grid — custom layout, kept with Controller) --- */}
+        {/* --- Multi-select Jurisdiction --- */}
         <Controller
           name="jurisdictions"
           control={control}
           render={({ field }) => (
             <FormControl error={!!errors.jurisdictions} component="fieldset">
-              <Typography variant="body2" fontWeight={600} sx={{ mb: 1 }}>
-                Jurisdiction (Select all that apply) *
+              <Typography variant="body2" fontWeight={600} sx={{ mb: 1.5 }}>
+                Jurisdiction (Select regional standards) *
               </Typography>
               <Box
                 sx={{
                   display: "grid",
-                  gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
-                  gap: 0.5,
+                  gridTemplateColumns: {
+                    xs: "1fr",
+                    sm: "repeat(2, 1fr)",
+                  },
+                  gap: 1.5,
                 }}
               >
-                {JURISDICTIONS.map((j) => (
-                  <FormControlLabel
-                    key={j.value}
-                    control={
-                      <Checkbox
-                        checked={field.value?.includes(j.value) ?? false}
-                        onChange={(e) => {
-                          const current = field.value ?? [];
-                          if (e.target.checked) {
-                            field.onChange([...current, j.value]);
-                          } else {
-                            field.onChange(
-                              current.filter((v: string) => v !== j.value)
-                            );
-                          }
-                        }}
-                        size="small"
-                      />
-                    }
-                    label={
-                      <Typography variant="body2">{j.label}</Typography>
-                    }
-                    sx={{
-                      border: "1px solid",
-                      borderColor: field.value?.includes(j.value)
-                        ? "primary.main"
-                        : "grey.300",
-                      borderRadius: 1.5,
-                      px: 1,
-                      py: 0.2,
-                      m: 0,
-                      transition: "border-color 0.2s",
-                      bgcolor: field.value?.includes(j.value)
-                        ? "primary.50"
-                        : "transparent",
-                    }}
-                  />
-                ))}
+                {JURISDICTIONS.map((j) => {
+                  const isChecked = field.value?.includes(j.value) ?? false;
+                  return (
+                    <FormControlLabel
+                      key={j.value}
+                      control={
+                        <Checkbox
+                          checked={isChecked}
+                          onChange={(e) => {
+                            const current = field.value ?? [];
+                            if (e.target.checked) {
+                              field.onChange([...current, j.value]);
+                            } else {
+                              field.onChange(
+                                current.filter((v: string) => v !== j.value)
+                              );
+                            }
+                          }}
+                          size="small"
+                        />
+                      }
+                      label={
+                        <Typography variant="body2" fontWeight={isChecked ? 600 : 400}>
+                          {j.label}
+                        </Typography>
+                      }
+                      sx={{
+                        border: "1px solid",
+                        borderColor: isChecked ? "primary.main" : "grey.200",
+                        borderRadius: 2,
+                        px: 1.5,
+                        py: 0.5,
+                        m: 0,
+                        transition: "all 0.2s",
+                        bgcolor: isChecked ? "primary.50" : "#fff",
+                        "&:hover": {
+                          borderColor: isChecked ? "primary.main" : "grey.400",
+                          bgcolor: isChecked ? "primary.50" : "grey.50",
+                        },
+                      }}
+                    />
+                  );
+                })}
               </Box>
               {errors.jurisdictions && (
-                <FormHelperText>{errors.jurisdictions.message}</FormHelperText>
+                <FormHelperText sx={{ mx: 0, mt: 1 }}>
+                  {errors.jurisdictions.message}
+                </FormHelperText>
               )}
             </FormControl>
           )}
         />
 
-        {/* --- Independence Declaration (using FormCheckbox) --- */}
+        {/* --- Independence Declaration --- */}
         <Paper
           variant="outlined"
           sx={{
-            p: 2,
-            borderRadius: 2,
+            p: 2.5,
+            borderRadius: 3,
+            bgcolor: errors.independenceDeclaration ? "error.50" : "#fff",
             borderColor: errors.independenceDeclaration
               ? "error.main"
-              : "grey.300",
+              : "grey.200",
+            transition: "all 0.2s",
           }}
         >
           <FormCheckbox<ProfileFormData>
             name="independenceDeclaration"
             control={control}
             label={
-              <Box>
-                <Typography variant="body2" fontWeight={600}>
+              <Box sx={{ ml: 1 }}>
+                <Typography variant="body2" fontWeight={700}>
                   Independence Declaration *
                 </Typography>
                 <Typography
                   variant="caption"
                   color="text.secondary"
-                  sx={{ lineHeight: 1.5 }}
+                  sx={{ lineHeight: 1.6, display: "block", mt: 0.5 }}
                 >
                   I hereby confirm that I have no conflicts of interest and will
-                  maintain independence in accordance with professional auditing
-                  standards.
+                  maintain strict independence in accordance with professional
+                  auditing standards (e.g., IESBA Code of Ethics).
                 </Typography>
               </Box>
             }
@@ -282,13 +332,20 @@ export default function ProfileStep({
         </Paper>
       </Stack>
 
-      <Stack direction="row" spacing={2} sx={{ mt: 4 }}>
+      <Stack direction="row" spacing={2} sx={{ mt: 5 }}>
         <Button
           variant="outlined"
           size="large"
           fullWidth
           onClick={onBack}
-          sx={{ py: 1.4, fontSize: "1rem", fontWeight: 600 }}
+          sx={{
+            py: 1.6,
+            fontSize: "1rem",
+            fontWeight: 700,
+            borderRadius: 2,
+            borderWidth: 2,
+            "&:hover": { borderWidth: 2 },
+          }}
         >
           Back
         </Button>
@@ -298,7 +355,14 @@ export default function ProfileStep({
           color="primary"
           size="large"
           fullWidth
-          sx={{ py: 1.4, fontSize: "1rem", fontWeight: 600 }}
+          sx={{
+            py: 1.6,
+            fontSize: "1rem",
+            fontWeight: 700,
+            borderRadius: 2,
+            boxShadow: "none",
+            "&:hover": { boxShadow: "none" },
+          }}
         >
           Complete Registration
         </Button>
@@ -306,3 +370,4 @@ export default function ProfileStep({
     </Box>
   );
 }
+

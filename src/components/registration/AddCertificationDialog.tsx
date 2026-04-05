@@ -1,6 +1,7 @@
 import {
   CertificationFormData,
   certificationSchema,
+  CERTIFICATION_TYPES,
 } from "@/schemas/registration";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Button from "@mui/material/Button";
@@ -10,7 +11,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import Stack from "@mui/material/Stack";
 import { useForm } from "react-hook-form";
-import { FormTextField } from "@/components/common";
+import { FormTextField, FormSelect } from "@/components/common";
 
 interface AddCertificationDialogProps {
   open: boolean;
@@ -25,7 +26,7 @@ export default function AddCertificationDialog({
 }: AddCertificationDialogProps) {
   const { control, handleSubmit, reset } = useForm<CertificationFormData>({
     resolver: zodResolver(certificationSchema),
-    defaultValues: { name: "", issuingBody: "", year: "" },
+    defaultValues: { type: "", licenseNumber: "", year: "" },
   });
 
   const onSubmit = (data: CertificationFormData) => {
@@ -53,21 +54,21 @@ export default function AddCertificationDialog({
 
       <DialogContent>
         <Stack spacing={2.5} sx={{ mt: 1 }}>
-          <FormTextField<CertificationFormData>
-            name="name"
+          <FormSelect<CertificationFormData>
+            name="type"
             control={control}
-            id="certName"
-            label="Certification Name"
-            placeholder="e.g. CPA, CA, ACCA"
+            id="certType"
+            label="Certification Type"
+            options={CERTIFICATION_TYPES}
             required
           />
 
           <FormTextField<CertificationFormData>
-            name="issuingBody"
+            name="licenseNumber"
             control={control}
-            id="certIssuingBody"
-            label="Issuing Body"
-            placeholder="e.g. AICPA, ICAI"
+            id="certLicenseNumber"
+            label="License Number"
+            placeholder="Enter your license number"
             required
           />
 
@@ -75,8 +76,9 @@ export default function AddCertificationDialog({
             name="year"
             control={control}
             id="certYear"
-            label="Year Obtained"
+            label="Year of Qualification"
             placeholder="e.g. 2023"
+            type="number"
             required
           />
         </Stack>
@@ -93,3 +95,4 @@ export default function AddCertificationDialog({
     </Dialog>
   );
 }
+

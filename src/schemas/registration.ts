@@ -25,7 +25,7 @@ export type VerificationFormData = z.infer<typeof verificationSchema>;
 // --- Step 3: Profile ---
 export const profileSchema = z.object({
   primaryAuditSector: z.string().min(1, "Primary audit sector is required"),
-  specializedAuditArea: z.string().optional(),
+  specializedAuditArea: z.string().min(1, "Specialized audit area is required"),
   jurisdictions: z
     .array(z.string())
     .min(1, "Select at least one jurisdiction"),
@@ -38,12 +38,17 @@ export type ProfileFormData = z.infer<typeof profileSchema>;
 
 // --- Certification (used in step 3 as a dynamic list) ---
 export const certificationSchema = z.object({
-  name: z.string().min(1, "Certification name is required"),
-  issuingBody: z.string().min(1, "Issuing body is required"),
+  type: z.string().min(1, "Certification type is required"),
+  licenseNumber: z.string().min(1, "License number is required"),
   year: z
     .string()
     .min(1, "Year is required")
-    .regex(/^\d{4}$/, "Enter a valid year"),
+    .regex(/^\d{4}$/, "Enter a valid 4-digit year")
+    .refine((val) => {
+      const year = parseInt(val);
+      const currentYear = new Date().getFullYear();
+      return year >= 1900 && year <= currentYear;
+    }, "Enter a realistic qualification year"),
 });
 
 export type CertificationFormData = z.infer<typeof certificationSchema>;
@@ -55,33 +60,44 @@ export interface RegistrationData {
   email: string;
   otp: string;
   primaryAuditSector: string;
-  specializedAuditArea?: string;
+  specializedAuditArea: string;
   jurisdictions: string[];
   independenceDeclaration: true;
   certifications: CertificationFormData[];
 }
 
 // --- Constants ---
-export const AUDIT_SECTORS = [
-  "Financial Services",
-  "Healthcare",
-  "Technology",
-  "Manufacturing",
-  "Energy & Utilities",
-  "Government & Public Sector",
-  "Retail & Consumer",
-  "Real Estate",
+
+export const CERTIFICATION_TYPES = [
+  { label: "CA", value: "CA" },
+  { label: "ACCA", value: "ACCA" },
+  { label: "CPA", value: "CPA" },
+  { label: "CIA", value: "CIA" },
+  { label: "CISA", value: "CISA" },
 ];
 
-export const SPECIALIZED_AREAS = [
-  "Internal Audit",
-  "External Audit",
-  "IT Audit",
-  "Forensic Audit",
-  "Compliance Audit",
-  "Environmental Audit",
-  "Tax Audit",
-];
+export const AUDIT_SECTOR_MAPPING: Record<string, { label: string; value: string }[]> = {
+  "Financial Services": [
+    { label: "Banking", value: "Banking" },
+    { label: "Insurance", value: "Insurance" },
+    { label: "Asset Management", value: "Asset Management" },
+  ],
+  Manufacturing: [
+    { label: "Automotive", value: "Automotive" },
+    { label: "Consumer Goods", value: "Consumer Goods" },
+    { label: "Industrial Products", value: "Industrial Products" },
+  ],
+  "Public Sector": [
+    { label: "Healthcare", value: "Healthcare" },
+    { label: "Education", value: "Education" },
+    { label: "Local Government", value: "Local Government" },
+  ],
+};
+
+export const AUDIT_SECTORS = Object.keys(AUDIT_SECTOR_MAPPING).map((key) => ({
+  label: key,
+  value: key,
+}));
 
 export const JURISDICTIONS = [
   { label: "UK - IFRS", value: "UK_IFRS" },
@@ -94,3 +110,5 @@ export const JURISDICTIONS = [
 ];
 
 export const STEP_LABELS = ["Identification", "Verification", "Profile"];
+
+
