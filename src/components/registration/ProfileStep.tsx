@@ -1,4 +1,8 @@
-import { FormCheckbox, FormSelect, LoadingButton } from "@/components/common";
+import {
+  FormCheckbox,
+  FormSelect,
+  LoadingButton,
+} from "@/components/common";
 import {
   AUDIT_SECTOR_MAPPING,
   AUDIT_SECTORS,
@@ -11,33 +15,47 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import EditIcon from "@mui/icons-material/Edit";
-import Alert from "@mui/material/Alert";
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import Checkbox from "@mui/material/Checkbox";
-import Chip from "@mui/material/Chip";
-import FormControl from "@mui/material/FormControl";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import FormHelperText from "@mui/material/FormHelperText";
-import IconButton from "@mui/material/IconButton";
-import Paper from "@mui/material/Paper";
-import Stack from "@mui/material/Stack";
-import Tooltip from "@mui/material/Tooltip";
-import Typography from "@mui/material/Typography";
+import {
+  Alert,
+  Box,
+  Button,
+  Checkbox,
+  Chip,
+  FormControl,
+  FormControlLabel,
+  FormHelperText,
+  IconButton,
+  Paper,
+  Stack,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import AddCertificationDialog from "./AddCertificationDialog";
 
 interface ProfileStepProps {
+  /** Form values previously entered to support 'Back' navigation */
   defaultValues: Partial<ProfileFormData>;
+  /** External state management for certifications (since they are dynamic) */
   certifications: CertificationFormData[];
+  /** Callback to update parent state when certifications are added/edited/removed */
   onCertificationsChange: (certs: CertificationFormData[]) => void;
+  /** Final completion callback */
   onNext: (data: ProfileFormData) => void;
+  /** Return to Step 1 (Verification) */
   onBack: () => void;
+  /** Loading state for the final registration API call */
   loading?: boolean;
+  /** Error message from the backend if registration fails */
   error?: string | null;
 }
 
+/**
+ * Step 2: Auditor Profile Completion
+ * Final step capturing professional specialization, regional jurisdictions,
+ * and academic/professional certifications.
+ */
 export default function ProfileStep({
   defaultValues,
   certifications,
@@ -47,9 +65,11 @@ export default function ProfileStep({
   loading = false,
   error = null,
 }: ProfileStepProps) {
+  // Modal state for adding/editing professional credentials
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
+  // Main form setup for profile data
   const {
     control,
     handleSubmit,
@@ -67,18 +87,21 @@ export default function ProfileStep({
     },
   });
 
+  // Watch the primary sector to provide dynamic sub-sector options
   const selectedSector = watch("primaryAuditSector");
 
-  // Get sub-sectors based on selected primary sector
+  /** Dynamic computed list of sub-sectors based on current selection */
   const specializedAreaOptions = useMemo(() => {
     if (!selectedSector) return [];
     return AUDIT_SECTOR_MAPPING[selectedSector] || [];
   }, [selectedSector]);
 
-  // Reset specialized area when sector changes
+  /** Reset specialized area when the primary domain changes to prevent invalid data */
   useEffect(() => {
     setValue("specializedAuditArea", "");
   }, [selectedSector, setValue]);
+
+  // --- Certification Management Handlers ---
 
   const handleOpenAddDialog = () => {
     setEditingIndex(null);
@@ -90,6 +113,7 @@ export default function ProfileStep({
     setDialogOpen(true);
   };
 
+  /** Persist a certification (Add or Update) */
   const handleSaveCertification = (cert: CertificationFormData) => {
     if (editingIndex !== null) {
       const updated = [...certifications];
@@ -106,40 +130,42 @@ export default function ProfileStep({
 
   return (
     <Box component="form" onSubmit={handleSubmit(onNext)} noValidate>
-      <Typography variant="h5" fontWeight={700} gutterBottom>
-        Auditor Profile Completion
-      </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 3.5 }}>
-        Please provide your professional audit specialization and credentials
-      </Typography>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h5" fontWeight={800} gutterBottom sx={{ letterSpacing: "-0.02em" }}>
+          Professional Profile
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Complement your account with your professional credentials and audit specialization area.
+        </Typography>
+      </Box>
 
+      {/* Persistence Error Display */}
       {error && (
-        <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
+        <Alert severity="error" sx={{ mb: 3, borderRadius: 2.5 }}>
           {error}
         </Alert>
       )}
 
-      {/* --- A. Professional Certifications --- */}
+      {/* --- Section A: Professional Certifications --- */}
       <Paper
         variant="outlined"
         sx={{
-          p: 2.5,
-          mb: 3.5,
+          p: 3,
+          mb: 4,
           borderRadius: 3,
+          bgcolor: "grey.50",
+          borderStyle: certifications.length > 0 ? "solid" : "dashed",
         }}
       >
         <Stack
-          direction={{ xs: "column", sm: "row" }}
+          direction="row"
           justifyContent="space-between"
-          alignItems={{ xs: "stretch", sm: "center" }}
-          spacing={2}
-          sx={{ mb: 2 }}
+          alignItems="center"
+          sx={{ mb: certifications.length > 0 ? 3 : 0 }}
         >
-          <Box>
-            <Typography variant="body1" fontWeight={700}>
-              Professional Certifications
-            </Typography>
-          </Box>
+          <Typography variant="subtitle1" fontWeight={800}>
+            Certifications
+          </Typography>
           <Button
             variant="contained"
             size="small"
@@ -147,39 +173,31 @@ export default function ProfileStep({
             onClick={handleOpenAddDialog}
             disabled={loading}
             sx={{
+              fontWeight: 700,
               textTransform: "none",
               borderRadius: 2,
-              px: { xs: 1.5, sm: 2 },
-              py: { xs: 1, sm: 0.5 },
               boxShadow: "none",
-              "&:hover": { boxShadow: "none" },
-              width: { xs: "100%", sm: "auto" },
+              px: 2,
             }}
           >
-            Add Certification
+            Add Credential
           </Button>
         </Stack>
 
         {certifications.length === 0 ? (
-          <Box
-            sx={{
-              borderRadius: 2,
-              bgcolor: "#fff",
-            }}
-          >
-            <Typography variant="body2" color="text.secondary">
-              No certifications added yet.
+          <Box sx={{ mt: 1.5, textAlign: "center", py: 2 }}>
+            <Typography variant="body2" color="text.secondary" fontStyle="italic">
+              No certifications declared yet.
             </Typography>
           </Box>
         ) : (
-          <Stack spacing={1.5}>
+          <Stack spacing={2}>
             {certifications.map((cert, index) => (
               <Stack
                 key={index}
-                direction={{ xs: "column", sm: "row" }}
-                alignItems={{ xs: "flex-start", sm: "center" }}
+                direction="row"
+                alignItems="center"
                 justifyContent="space-between"
-                spacing={2}
                 sx={{
                   py: 1.5,
                   px: 2,
@@ -187,53 +205,42 @@ export default function ProfileStep({
                   borderRadius: 2,
                   border: "1px solid",
                   borderColor: "grey.200",
+                  "&:hover": { borderColor: "primary.light" },
                 }}
               >
-                <Stack spacing={0.5} sx={{ width: "100%" }}>
-                  <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+                <Stack spacing={0.5}>
+                  <Stack direction="row" spacing={1} alignItems="center">
                     <Chip
                       label={cert.type}
                       color="primary"
                       size="small"
-                      sx={{ fontWeight: 700, borderRadius: 1 }}
+                      sx={{ fontWeight: 800, borderRadius: 1 }}
                     />
-                    <Typography variant="body2" fontWeight={600}>
-                      License: {cert.licenseNumber}
+                    <Typography variant="body2" fontWeight={700}>
+                      {cert.licenseNumber}
                     </Typography>
                   </Stack>
-                  <Typography variant="caption" color="text.secondary">
-                    Qualified in {cert.year}
+                  <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                    Year: {cert.year}
                   </Typography>
                 </Stack>
-                <Stack
-                  direction="row"
-                  spacing={1}
-                  sx={{
-                    width: { xs: "100%", sm: "auto" },
-                    justifyContent: { xs: "flex-end", sm: "flex-start" },
-                    borderTop: { xs: "1px solid", sm: "none" },
-                    borderColor: "grey.100",
-                    pt: { xs: 1, sm: 0 },
-                  }}
-                >
-                  <Tooltip title="Edit Certification" arrow>
+                <Stack direction="row" spacing={0.5}>
+                  <Tooltip title="Edit" arrow>
                     <IconButton
                       size="small"
                       color="primary"
-                      disabled={loading}
                       onClick={() => handleOpenEditDialog(index)}
-                      sx={{ bgcolor: "primary.50", "&:hover": { bgcolor: "primary.100" } }}
+                      disabled={loading}
                     >
                       <EditIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
-                  <Tooltip title="Delete Certification" arrow>
+                  <Tooltip title="Remove" arrow>
                     <IconButton
                       size="small"
                       color="error"
-                      disabled={loading}
                       onClick={() => handleRemoveCertification(index)}
-                      sx={{ bgcolor: "error.50", "&:hover": { bgcolor: "error.100" } }}
+                      disabled={loading}
                     >
                       <DeleteOutlineIcon fontSize="small" />
                     </IconButton>
@@ -243,9 +250,9 @@ export default function ProfileStep({
             ))}
           </Stack>
         )}
-
       </Paper>
 
+      {/* Certification Modal */}
       <AddCertificationDialog
         open={dialogOpen}
         initialData={editingIndex !== null ? certifications[editingIndex] : null}
@@ -253,50 +260,45 @@ export default function ProfileStep({
         onSave={handleSaveCertification}
       />
 
-      <Stack spacing={3.5}>
-        {/* --- B. Audit Specialization --- */}
-        <Stack spacing={2}>
+      <Stack spacing={4}>
+        {/* --- Section B: Audit Specialization --- */}
+        <Stack spacing={2.5}>
           <FormSelect<ProfileFormData>
             name="primaryAuditSector"
             control={control}
-            label="Primary Audit Sector"
+            label="Primary Audit Domain"
             required
             options={AUDIT_SECTORS}
-            placeholder="Select primary sector"
+            placeholder="e.g. Financial Services"
             disabled={loading}
           />
 
           <FormSelect<ProfileFormData>
             name="specializedAuditArea"
             control={control}
-            label="Specialized Audit Area"
+            label="Specialized Sub-sector"
             required
             options={specializedAreaOptions}
             disabled={!selectedSector || loading}
             placeholder={
-              !selectedSector
-                ? "Select a sector first"
-                : "Select specialization"
+              !selectedSector ? "Select domain first" : "Choose specialization"
             }
           />
         </Stack>
 
-        {/* --- Multi-select Jurisdiction --- */}
+        {/* --- Section C: Multi-select Regional Jurisdictions --- */}
         <Controller
           name="jurisdictions"
           control={control}
           render={({ field }) => (
             <FormControl error={!!errors.jurisdictions} component="fieldset" disabled={loading}>
-              <Typography variant="body2" fontWeight={600} sx={{ mb: 1.5 }}>
-                Jurisdiction (Select regional standards) *
+              <Typography variant="body2" fontWeight={800} sx={{ mb: 2 }}>
+                Regional Jurisdictions *
               </Typography>
               <Box
                 sx={{
                   display: "grid",
-                  gridTemplateColumns: {
-                    xs: "1fr",
-                    sm: "repeat(2, 1fr)",
-                  },
+                  gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
                   gap: 1.5,
                 }}
               >
@@ -309,43 +311,37 @@ export default function ProfileStep({
                         <Checkbox
                           checked={isChecked}
                           onChange={(e) => {
-                            const current = field.value ?? [];
+                            const val = field.value ?? [];
                             if (e.target.checked) {
-                              field.onChange([...current, j.value]);
+                              field.onChange([...val, j.value]);
                             } else {
-                              field.onChange(
-                                current.filter((v: string) => v !== j.value)
-                              );
+                              field.onChange(val.filter((v: string) => v !== j.value));
                             }
                           }}
                           size="small"
                         />
                       }
                       label={
-                        <Typography variant="body2" fontWeight={isChecked ? 600 : 400}>
+                        <Typography variant="body2" fontWeight={isChecked ? 700 : 400}>
                           {j.label}
                         </Typography>
                       }
                       sx={{
                         border: "1px solid",
                         borderColor: isChecked ? "primary.main" : "grey.200",
-                        borderRadius: 2,
+                        borderRadius: 2.5,
                         px: 1.5,
                         py: 0.5,
                         m: 0,
-                        transition: "all 0.2s",
                         bgcolor: isChecked ? "primary.50" : "#fff",
-                        "&:hover": {
-                          borderColor: isChecked ? "primary.main" : "grey.400",
-                          bgcolor: isChecked ? "primary.50" : "grey.50",
-                        },
+                        "&:hover": { borderColor: "primary.main" },
                       }}
                     />
                   );
                 })}
               </Box>
               {errors.jurisdictions && (
-                <FormHelperText sx={{ mx: 0, mt: 1 }}>
+                <FormHelperText error sx={{ mx: 0, mt: 1, fontWeight: 500 }}>
                   {errors.jurisdictions.message}
                 </FormHelperText>
               )}
@@ -353,17 +349,15 @@ export default function ProfileStep({
           )}
         />
 
-        {/* --- Independence Declaration --- */}
+        {/* --- Section D: Compliance & Ethics Declaration --- */}
         <Paper
           variant="outlined"
           sx={{
-            p: 2.5,
-            borderRadius: 3,
-            bgcolor: errors.independenceDeclaration ? "error.50" : "#fff",
-            borderColor: errors.independenceDeclaration
-              ? "error.main"
-              : "grey.200",
-            transition: "all 0.2s",
+            p: 3,
+            borderRadius: 3.5,
+            bgcolor: errors.independenceDeclaration ? "error.50" : "grey.50",
+            borderColor: errors.independenceDeclaration ? "error.main" : "grey.200",
+            transition: "all 0.3s ease",
           }}
         >
           <FormCheckbox<ProfileFormData>
@@ -371,18 +365,17 @@ export default function ProfileStep({
             control={control}
             disabled={loading}
             label={
-              <Box sx={{ ml: 1 }}>
-                <Typography variant="body2" fontWeight={700}>
-                  Independence Declaration *
+              <Box sx={{ ml: 1.5 }}>
+                <Typography variant="body2" fontWeight={800}>
+                  Independence & Ethics Declaration *
                 </Typography>
                 <Typography
                   variant="caption"
                   color="text.secondary"
-                  sx={{ lineHeight: 1.6, display: "block", mt: 0.5 }}
+                  sx={{ lineHeight: 1.6, display: "block", mt: 1, fontWeight: 500 }}
                 >
-                  I hereby confirm that I have no conflicts of interest and will
-                  maintain strict independence in accordance with professional
-                  auditing standards (e.g., IESBA Code of Ethics).
+                  By checking this box, I confirm I maintain full independence and
+                  have no conflicts of interest as per IESBA and local standards.
                 </Typography>
               </Box>
             }
@@ -390,47 +383,33 @@ export default function ProfileStep({
         </Paper>
       </Stack>
 
-      <Stack direction={{ xs: "column-reverse", sm: "row" }} spacing={2} sx={{ mt: 5 }}>
+      {/* Progress Actions */}
+      <Stack direction={{ xs: "column-reverse", sm: "row" }} spacing={2} sx={{ mt: 6 }}>
         <Button
           variant="outlined"
           size="large"
           fullWidth
           onClick={onBack}
           disabled={loading}
-          sx={{
-            py: 1.6,
-            fontSize: "1rem",
-            fontWeight: 700,
-            borderRadius: 2,
-            borderWidth: 2,
-            "&:hover": { borderWidth: 2 },
-          }}
+          sx={{ py: 1.6, fontSize: "0.95rem", fontWeight: 700, borderRadius: 2.5 }}
         >
-          Back
+          Previous Step
         </Button>
         <LoadingButton
           type="submit"
           variant="contained"
-          color="primary"
           size="large"
           fullWidth
           loading={loading}
-          loadingText="Finalizing Registration…"
-          sx={{
-            py: 1.6,
-            fontSize: "1rem",
-            fontWeight: 700,
-            borderRadius: 2,
-            boxShadow: "none",
-            "&:hover": { boxShadow: "none" },
-          }}
+          loadingText="Finalizing Account…"
+          sx={{ py: 1.6, fontSize: "0.95rem", fontWeight: 800, borderRadius: 2.5 }}
         >
-          Complete Registration
+          Complete Auditor Profile
         </LoadingButton>
       </Stack>
-
     </Box>
   );
 }
+
 
 

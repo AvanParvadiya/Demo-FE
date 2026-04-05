@@ -12,6 +12,9 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useForm } from "react-hook-form";
 
+/**
+ * API Response for the send-otp endpoint
+ */
 interface SendOtpResponse {
   message: string;
   otp: string;
@@ -19,19 +22,27 @@ interface SendOtpResponse {
 }
 
 interface IdentificationStepProps {
+  /** Previously entered values for form persistence */
   defaultValues: Partial<IdentificationFormData>;
+  /** Callback triggering move to Step 1 (Verification) */
   onNext: (data: IdentificationFormData, otpCode: string) => void;
 }
 
+/**
+ * Step 0: Identification
+ * Captures basic auditor details (name, email) and triggers the registration OTP.
+ */
 export default function IdentificationStep({
   defaultValues,
   onNext,
 }: IdentificationStepProps) {
+  // Use specialized hook for the API call to generate/send the OTP
   const { mutate: sendOtp, loading, error } = useApiMutation<
     { email: string },
     SendOtpResponse
   >("post", API_ENDPOINTS.OTP.SEND);
 
+  // Initialize form with local persistence and validation
   const { control, handleSubmit } = useForm<IdentificationFormData>({
     resolver: zodResolver(identificationSchema),
     defaultValues: {
@@ -42,28 +53,37 @@ export default function IdentificationStep({
     },
   });
 
+  /**
+   * Form Submission Handler
+   * Requests an OTP from the backend before proceeding to verification.
+   */
   const onSubmit = async (data: IdentificationFormData) => {
     const result = await sendOtp({ email: data.email });
     if (result) {
+      // Pass the captured data and the received OTP (for simulation) to the orchestrator
       onNext(data, result.otp);
     }
   };
 
   return (
     <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
-      <Typography variant="h5" fontWeight={700} gutterBottom>
-        User Identification
-      </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 3.5 }}>
-        Please provide your primary identity information
-      </Typography>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h5" fontWeight={700} gutterBottom>
+          User Identification
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Please provide your primary identity information to begin registration.
+        </Typography>
+      </Box>
 
+      {/* Global API Error Alert */}
       {error && (
-        <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+        <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
           {error}
         </Alert>
       )}
 
+      {/* Input Fields Stack */}
       <Stack spacing={3}>
         <FormTextField<IdentificationFormData>
           name="firstName"
@@ -100,11 +120,12 @@ export default function IdentificationStep({
         size="large"
         fullWidth
         loading={loading}
-        loadingText="Sending OTP…"
-        sx={{ mt: 4, py: 1.4, fontSize: "1rem", fontWeight: 600 }}
+        loadingText="Generating Identity OTP…"
+        sx={{ mt: 5, py: 1.4, fontSize: "1rem", fontWeight: 700, borderRadius: 2.5 }}
       >
-        Next
+        Continue to Verification
       </LoadingButton>
     </Box>
   );
 }
+
