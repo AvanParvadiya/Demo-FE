@@ -1,10 +1,9 @@
-import "@/styles/globals.css";
-import type { AppProps } from "next/app";
-import { ThemeProvider } from "@mui/material/styles";
-import CssBaseline from "@mui/material/CssBaseline";
-import { CacheProvider, EmotionCache } from "@emotion/react";
-import theme from "@/theme/theme";
 import createEmotionCache from "@/theme/EmotionCache";
+import theme from "@/theme/theme";
+import { CacheProvider, EmotionCache } from "@emotion/react";
+import CssBaseline from "@mui/material/CssBaseline";
+import { ThemeProvider } from "@mui/material/styles";
+import type { AppProps } from "next/app";
 
 const clientSideEmotionCache = createEmotionCache();
 
