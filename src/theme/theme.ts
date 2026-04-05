@@ -44,6 +44,16 @@ const theme = createTheme({
     borderRadius: 4,
   },
   components: {
+    MuiOutlinedInput: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+        },
+        input: {
+          padding: "16px 16px !important",
+        },
+      },
+    },
     MuiButton: {
       styleOverrides: {
         root: {
