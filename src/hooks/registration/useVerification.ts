@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
 /** Configuration constants */
-const RESEND_COOLDOWN = 6; // seconds
+const RESEND_COOLDOWN = 60; // seconds
 
 interface UseVerificationProps {
   email: string;
