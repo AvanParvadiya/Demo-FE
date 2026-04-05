@@ -115,8 +115,6 @@ export default function ProfileStep({
           p: 2.5,
           mb: 3.5,
           borderRadius: 3,
-          borderColor: "grey.300",
-          bgcolor: "grey.50",
         }}
       >
         <Stack
@@ -150,11 +148,7 @@ export default function ProfileStep({
         {certifications.length === 0 ? (
           <Box
             sx={{
-              p: 3,
-              border: "1px dashed",
-              borderColor: "grey.400",
               borderRadius: 2,
-              textAlign: "center",
               bgcolor: "#fff",
             }}
           >
