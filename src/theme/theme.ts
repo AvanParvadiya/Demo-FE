@@ -54,6 +54,14 @@ const theme = createTheme({
         },
       },
     },
+    MuiCheckbox: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+          padding:"16px 16px !important"
+        },
+      }
+    },
     MuiButton: {
       styleOverrides: {
         root: {
