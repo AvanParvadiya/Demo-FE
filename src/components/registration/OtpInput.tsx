@@ -1,7 +1,7 @@
-import { useRef, useCallback, KeyboardEvent, ClipboardEvent } from "react";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import { ChangeEvent } from "react";
 
 interface OtpInputProps {
   value: string;
@@ -18,61 +18,10 @@ export default function OtpInput({
   error,
   helperText,
 }: OtpInputProps) {
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-
-  const digits = value.padEnd(OTP_LENGTH, "").slice(0, OTP_LENGTH).split("");
-
-  const focusInput = useCallback((index: number) => {
-    if (index >= 0 && index < OTP_LENGTH) {
-      inputRefs.current[index]?.focus();
-    }
-  }, []);
-
-  const handleChange = useCallback(
-    (index: number, digit: string) => {
-      if (!/^\d?$/.test(digit)) return; // only digits
-
-      const newDigits = [...digits];
-      newDigits[index] = digit;
-      const newValue = newDigits.join("").replace(/\s/g, "");
-      onChange(newValue);
-
-      if (digit && index < OTP_LENGTH - 1) {
-        focusInput(index + 1);
-      }
-    },
-    [digits, onChange, focusInput]
-  );
-
-  const handleKeyDown = useCallback(
-    (index: number, e: KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Backspace" && !digits[index] && index > 0) {
-        focusInput(index - 1);
-      }
-      if (e.key === "ArrowLeft" && index > 0) {
-        focusInput(index - 1);
-      }
-      if (e.key === "ArrowRight" && index < OTP_LENGTH - 1) {
-        focusInput(index + 1);
-      }
-    },
-    [digits, focusInput]
-  );
-
-  const handlePaste = useCallback(
-    (e: ClipboardEvent<HTMLInputElement>) => {
-      e.preventDefault();
-      const pastedData = e.clipboardData
-        .getData("text")
-        .replace(/\D/g, "")
-        .slice(0, OTP_LENGTH);
-      if (pastedData) {
-        onChange(pastedData);
-        focusInput(Math.min(pastedData.length, OTP_LENGTH - 1));
-      }
-    },
-    [onChange, focusInput]
-  );
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/\D/g, "").slice(0, OTP_LENGTH);
+    onChange(val);
+  };
 
   return (
     <Box>
@@ -81,58 +30,60 @@ export default function OtpInput({
         fontWeight={600}
         sx={{ mb: 1.5, textAlign: "center" }}
       >
-        Enter OTP
+        Enter 6-digit OTP
       </Typography>
 
-      <Box
-        sx={{
-          display: "flex",
-          gap: 1.5,
-          justifyContent: "center",
-        }}
-      >
-        {Array.from({ length: OTP_LENGTH }).map((_, index) => (
-          <TextField
-            key={index}
-            inputRef={(el) => {
-              inputRefs.current[index] = el;
-            }}
-            value={digits[index] || ""}
-            onChange={(e) => handleChange(index, e.target.value.slice(-1))}
-            onKeyDown={(e) =>
-              handleKeyDown(index, e as KeyboardEvent<HTMLInputElement>)
-            }
-            onPaste={handlePaste}
-            error={error}
-            inputProps={{
-              maxLength: 1,
-              inputMode: "numeric",
-              pattern: "[0-9]*",
-              style: {
-                textAlign: "center",
-                fontSize: "1.5rem",
-                fontWeight: 600,
-                padding: "12px 0",
-                width: "44px",
-                letterSpacing: 0,
+      <Box sx={{ display: "flex", justifyContent: "center" }}>
+        <TextField
+          value={value}
+          onChange={handleChange}
+          error={error}
+          variant="outlined"
+          autoFocus
+          fullWidth
+          autoComplete="one-time-code"
+          inputProps={{
+            maxLength: OTP_LENGTH,
+            inputMode: "numeric",
+            style: {
+              textAlign: "center",
+              fontSize: "2rem",
+              fontWeight: 800,
+              letterSpacing: "0.8rem",
+              padding: "18px 0",
+              textIndent: "0.8rem", // Balance the initial letter spacing
+            },
+          }}
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              borderRadius: 3,
+              bgcolor: "grey.50",
+              "& fieldset": {
+                borderColor: "grey.300",
+                borderWidth: 2,
               },
-              "aria-label": `OTP digit ${index + 1}`,
-            }}
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                borderRadius: 2,
-                transition: "border-color 0.2s",
+              "&:hover fieldset": {
+                borderColor: "primary.main",
               },
-            }}
-          />
-        ))}
+              "&.Mui-focused fieldset": {
+                borderColor: "primary.main",
+              },
+            },
+            "& .MuiInputBase-input::placeholder": {
+              letterSpacing: "normal",
+              textIndent: 0,
+            },
+          }}
+          placeholder="000 000"
+        />
       </Box>
+
 
       {helperText && (
         <Typography
           variant="caption"
           color="error"
-          sx={{ display: "block", textAlign: "center", mt: 1 }}
+          sx={{ display: "block", textAlign: "center", mt: 1, fontWeight: 500 }}
         >
           {helperText}
         </Typography>
@@ -140,3 +91,4 @@ export default function OtpInput({
     </Box>
   );
 }
+
