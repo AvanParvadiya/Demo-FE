@@ -18,9 +18,11 @@ import type { CertificationFormData, IdentificationFormData, ProfileFormData, Re
 import { useApiMutation } from "@/hooks";
 import { API_ENDPOINTS } from "@/lib";
 
+import { useRouter } from "next/router";
+
 export default function RegisterPage() {
+  const router = useRouter();
   const [activeStep, setActiveStep] = useState(0);
-  const [completed, setCompleted] = useState(false);
 
   const {
     mutate: register,
@@ -69,69 +71,16 @@ export default function RegisterPage() {
 
       const result = await register(finalData);
       if (result) {
-        setCompleted(true);
+        await router.push("/users");
       }
     },
-    [identificationData, certifications, otpCode, register]
+    [identificationData, certifications, otpCode, register, router]
   );
-
 
   const handleBack = useCallback(() => {
     setActiveStep((prev) => prev - 1);
   }, []);
 
-  // --- Completion screen ---
-  if (completed) {
-    return (
-      <>
-        <Head>
-          <title>Registration Complete</title>
-        </Head>
-        <Box
-          sx={{
-            minHeight: "100vh",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            bgcolor: "background.default",
-          }}
-        >
-          <Paper
-            elevation={0}
-            sx={{
-              maxWidth: 520,
-              width: "100%",
-              p: { xs: 3, sm: 5 },
-              borderRadius: 4,
-              border: "1px solid",
-              borderColor: "grey.200",
-              textAlign: "center",
-            }}
-          >
-            <CheckCircleOutlineIcon
-              sx={{ fontSize: 72, color: "success.main", mb: 2 }}
-            />
-            <Typography variant="h4" fontWeight={700} gutterBottom>
-              Registration Complete!
-            </Typography>
-            <Typography
-              variant="body1"
-              color="text.secondary"
-              sx={{ mb: 3 }}
-            >
-              Your auditor profile has been created successfully. You can now
-              access the platform.
-            </Typography>
-            <Stack direction="row" spacing={2} justifyContent="center">
-              <Button variant="contained" size="large" href="/">
-                Go to Home
-              </Button>
-            </Stack>
-          </Paper>
-        </Box>
-      </>
-    );
-  }
 
   return (
     <>
