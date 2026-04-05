@@ -165,6 +165,8 @@ export default function Home() {
                   Register Your Company
                 </Button>
                 <Button
+                  component={Link}
+                  href="/users"
                   variant="outlined"
                   size="large"
                   sx={{
@@ -174,9 +176,10 @@ export default function Home() {
                     fontWeight: 600,
                   }}
                 >
-                  Learn More
+                  View Auditors
                 </Button>
               </Stack>
+
             </Stack>
           </Container>
         </Box>
