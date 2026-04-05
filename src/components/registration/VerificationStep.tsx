@@ -1,11 +1,6 @@
 import { LoadingButton } from "@/components/common";
-import { useApiMutation } from "@/hooks";
-import { API_ENDPOINTS } from "@/lib";
-import {
-  VerificationFormData,
-  verificationSchema,
-} from "@/schemas/registration";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useVerification } from "@/hooks/registration/useVerification";
+import { VerificationFormData } from "@/schemas/registration";
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import {
   Alert,
@@ -15,12 +10,8 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { useCallback, useEffect, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller } from "react-hook-form";
 import OtpInput from "./OtpInput";
-
-/** Configuration constants */
-const RESEND_COOLDOWN = 60; // seconds
 
 interface VerificationStepProps {
   /** The email address being verified */
@@ -43,78 +34,27 @@ export default function VerificationStep({
   onNext,
   onBack,
 }: VerificationStepProps) {
-  // Countdown for the 'Resend' button cooldown
-  const [countdown, setCountdown] = useState(RESEND_COOLDOWN);
-  // Current valid OTP for dev/testing visibility
-  const [displayOtp, setDisplayOtp] = useState(otpCode);
-
-  // Hook handles resending a new OTP to the same email
-  const { mutate: sendOtp, loading: resending } = useApiMutation<
-    { email: string },
-    { otp: string }
-  >("post", API_ENDPOINTS.OTP.SEND);
-
-  // Hook handles verifying the user-entered OTP code
-  const {
-    mutate: verifyOtp,
-    loading: verifying,
-    error: verifyError,
-    reset: resetVerify,
-  } = useApiMutation<{ email: string; otp: string }, { verified: boolean }>(
-    "post",
-    API_ENDPOINTS.OTP.VERIFY
-  );
-
-  // Form setup for the single OTP input field
+  // Use custom hook for OTP logic and timers
   const {
     control,
     handleSubmit,
-    watch,
-    reset,
-    formState: { errors },
-  } = useForm<VerificationFormData>({
-    resolver: zodResolver(verificationSchema),
-    defaultValues: { otp: "" },
+    errors,
+    countdown,
+    displayOtp,
+    resending,
+    verifying,
+    verifyError,
+    resetVerify,
+    isOtpComplete,
+    handleResend,
+  } = useVerification({
+    email,
+    initialOtp: otpCode,
+    onSuccess: onNext,
   });
 
-  // Watch OTP value to determine if 'Verify' button should be active
-  const otpValue = watch("otp");
-  const isOtpComplete = otpValue?.length === 6;
-
-  // Manage the resend cooldown timer
-  useEffect(() => {
-    if (countdown <= 0) return;
-    const timer = setInterval(() => {
-      setCountdown((prev) => prev - 1);
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [countdown]);
-
-  /**
-   * Resend Handler
-   * Resets the cooldown timer and requests a new OTP from the server.
-   */
-  const handleResend = useCallback(async () => {
-    setCountdown(RESEND_COOLDOWN);
-    const result = await sendOtp({ email });
-    if (result) {
-      setDisplayOtp(result.otp);
-      reset({ otp: "" }); // Clear the input field for the new code
-    }
-  }, [sendOtp, email, reset]);
-
-  /**
-   * Final Verification Submission
-   */
-  const onSubmit = async (data: VerificationFormData) => {
-    const result = await verifyOtp({ email, otp: data.otp });
-    if (result?.verified) {
-      onNext(data); // Identification + OTP confirmed, proceed to profile
-    }
-  };
-
   return (
-    <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
+    <Box component="form" onSubmit={handleSubmit} noValidate>
       {/* Header icon and title */}
       <Stack alignItems="center" spacing={1.5} sx={{ mb: 4 }}>
         <Box
@@ -230,4 +170,5 @@ export default function VerificationStep({
     </Box>
   );
 }
+
 

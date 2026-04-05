@@ -123,7 +123,7 @@ export default function IdentificationStep({
         loadingText="Generating Identity OTP…"
         sx={{ mt: 5, py: 1.4, fontSize: "1rem", fontWeight: 700, borderRadius: 2.5 }}
       >
-        Continue to Verification
+        Next
       </LoadingButton>
     </Box>
   );
