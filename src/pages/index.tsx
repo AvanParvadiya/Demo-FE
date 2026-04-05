@@ -10,12 +10,10 @@ import {
   Button,
   Chip,
   Container,
-  Fade,
   Paper,
-  Skeleton,
   Stack,
   Tooltip,
-  Typography,
+  Typography
 } from "@mui/material";
 import Head from "next/head";
 import Link from "next/link";
@@ -255,14 +253,7 @@ export default function Home() {
               overflow: "hidden",
             }}
           >
-            {loading ? (
-              <Stack spacing={2} p={2}>
-                <Skeleton variant="rectangular" height={60} sx={{ borderRadius: 1 }} />
-                {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                  <Skeleton key={i} variant="rectangular" height={52} sx={{ borderRadius: 1 }} />
-                ))}
-              </Stack>
-            ) : error ? (
+            {error ? (
               <Box sx={{ p: 8, textAlign: "center" }}>
                 <Typography variant="h6" color="error.main" fontWeight={700}>
                   Failed to synchronize directory.
@@ -272,16 +263,15 @@ export default function Home() {
                 </Typography>
               </Box>
             ) : (
-              <Fade in timeout={800}>
-                <Box>
-                  <DataTable
-                    columns={columns}
-                    rows={users}
-                    getRowId={(row) => row.id}
-                    emptyMessage="No auditors found. Be the first to register!"
-                  />
-                </Box>
-              </Fade>
+              <Box>
+                <DataTable
+                  columns={columns}
+                  rows={users}
+                  loading={loading}
+                  getRowId={(row) => row.id}
+                  emptyMessage="No auditors found. Be the first to register!"
+                />
+              </Box>
             )}
           </Paper>
         </Container>

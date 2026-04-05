@@ -1,14 +1,15 @@
-import { ReactNode, useState, useMemo, useCallback, ChangeEvent } from "react";
+import Checkbox from "@mui/material/Checkbox";
+import Paper from "@mui/material/Paper";
+import Skeleton from "@mui/material/Skeleton";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
+import TablePagination from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
 import TableSortLabel from "@mui/material/TableSortLabel";
-import TablePagination from "@mui/material/TablePagination";
-import Paper from "@mui/material/Paper";
-import Checkbox from "@mui/material/Checkbox";
+import { ChangeEvent, ReactNode, useCallback, useMemo, useState } from "react";
 import EmptyState from "./EmptyState";
 
 export interface Column<T> {
@@ -45,6 +46,7 @@ interface DataTableProps<T extends Record<string, unknown>> {
   emptyMessage?: string;
   /** Disable internal pagination (for server-side pagination) */
   disablePagination?: boolean;
+  loading?: boolean;
   /** Total row count for server-side pagination */
   totalCount?: number;
   page?: number;
@@ -63,6 +65,7 @@ export default function DataTable<T extends Record<string, unknown>>({
   onSelectionChange,
   defaultSortBy,
   defaultSortDir = "asc",
+  loading = false,
   rowsPerPageOptions = [5, 10, 25],
   emptyMessage = "No records to display",
   disablePagination = false,
@@ -173,7 +176,7 @@ export default function DataTable<T extends Record<string, unknown>>({
     [selectedIds, onSelectionChange]
   );
 
-  if (rows.length === 0) {
+  if (!loading && rows.length === 0) {
     return <EmptyState message={emptyMessage} />;
   }
 
@@ -225,39 +228,54 @@ export default function DataTable<T extends Record<string, unknown>>({
           </TableHead>
 
           <TableBody>
-            {paginatedRows.map((row, index) => {
-              const rowId = getRowId(row);
-              const isSelected = selectedIds.includes(rowId);
-
-              return (
-                <TableRow
-                  key={rowId}
-                  hover
-                  selected={isSelected}
-                  sx={{
-                    "&:last-child td": { borderBottom: 0 },
-                    cursor: selectable ? "pointer" : "default",
-                  }}
-                  onClick={
-                    selectable ? () => handleSelectRow(rowId) : undefined
-                  }
-                >
+            {loading
+              ? Array.from(new Array(rowsPerPage || 5)).map((_, index) => (
+                <TableRow key={`skeleton-${index}`}>
                   {selectable && (
                     <TableCell padding="checkbox">
-                      <Checkbox checked={isSelected} size="small" />
+                      <Skeleton variant="circular" width={20} height={20} />
                     </TableCell>
                   )}
-
                   {columns.map((col) => (
                     <TableCell key={col.id} align={col.align ?? "left"}>
-                      {col.render
-                        ? col.render(row, index)
-                        : (row[col.id] as ReactNode) ?? "—"}
+                      <Skeleton variant="rounded" width="100%" height={20} />
                     </TableCell>
                   ))}
                 </TableRow>
-              );
-            })}
+              ))
+              : paginatedRows.map((row, index) => {
+                const rowId = getRowId(row);
+                const isSelected = selectedIds.includes(rowId);
+
+                return (
+                  <TableRow
+                    key={rowId}
+                    hover
+                    selected={isSelected}
+                    sx={{
+                      "&:last-child td": { borderBottom: 0 },
+                      cursor: selectable ? "pointer" : "default",
+                    }}
+                    onClick={
+                      selectable ? () => handleSelectRow(rowId) : undefined
+                    }
+                  >
+                    {selectable && (
+                      <TableCell padding="checkbox">
+                        <Checkbox checked={isSelected} size="small" />
+                      </TableCell>
+                    )}
+
+                    {columns.map((col) => (
+                      <TableCell key={col.id} align={col.align ?? "left"}>
+                        {col.render
+                          ? col.render(row, index)
+                          : (row[col.id] as ReactNode) ?? "—"}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                );
+              })}
           </TableBody>
         </Table>
       </TableContainer>
