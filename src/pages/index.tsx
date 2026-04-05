@@ -1,157 +1,175 @@
 import { Navbar } from "@/components/common";
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import AssessmentIcon from "@mui/icons-material/Assessment";
-import GroupsIcon from "@mui/icons-material/Groups";
-import SecurityIcon from "@mui/icons-material/Security";
-import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
+import DataTable, { Column } from "@/components/common/DataTable";
+import { useApiGet } from "@/hooks";
+import { API_ENDPOINTS } from "@/lib";
+import EmailIcon from "@mui/icons-material/Email";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import {
+  Avatar,
   Box,
   Button,
+  Chip,
   Container,
-  Grid,
+  Fade,
   Paper,
+  Skeleton,
   Stack,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import Head from "next/head";
 import Link from "next/link";
 
-// --- Data Constants ---
-const FEATURES = [
-  {
-    icon: <VerifiedUserIcon sx={{ fontSize: 40, color: "primary.main" }} />,
-    title: "Certified Auditors",
-    description: "Access a network of verified and certified auditing professionals across multiple jurisdictions.",
-  },
-  {
-    icon: <SecurityIcon sx={{ fontSize: 40, color: "primary.main" }} />,
-    title: "Compliance Ready",
-    description: "Stay compliant with IFRS, GAAP, ICAI and other international auditing standards effortlessly.",
-  },
-  {
-    icon: <AssessmentIcon sx={{ fontSize: 40, color: "primary.main" }} />,
-    title: "Real-time Reporting",
-    description: "Generate and access audit reports in real-time with comprehensive dashboards and analytics.",
-  },
-  {
-    icon: <GroupsIcon sx={{ fontSize: 40, color: "primary.main" }} />,
-    title: "Multi-team Collaboration",
-    description: "Collaborate across audit teams with role-based access, task assignments, and shared workspaces.",
-  },
-];
+// --- Types ---
+interface User extends Record<string, unknown> {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  primaryAuditSector: string;
+  specializedAuditArea: string;
+  jurisdictions: string[];
+  certifications: {
+    type: string;
+    licenseNumber: string;
+    year: string;
+  }[];
+}
 
-const STATS = [
-  { value: "500+", label: "Registered Companies" },
-  { value: "1,200+", label: "Certified Auditors" },
-  { value: "30+", label: "Jurisdictions" },
-  { value: "99.9%", label: "Uptime" },
+// --- Table Configuration ---
+const columns: Column<User>[] = [
+  {
+    id: "name",
+    label: "Auditor Name",
+    sortable: true,
+    minWidth: 200,
+    render: (row) => (
+      <Stack direction="row" spacing={1.5} alignItems="center">
+        <Avatar
+          sx={{
+            width: 32,
+            height: 32,
+            bgcolor: "primary.50",
+            color: "primary.main",
+            fontSize: "0.875rem",
+            fontWeight: 700,
+          }}
+        >
+          {row.firstName[0]}
+          {row.lastName[0]}
+        </Avatar>
+        <Typography variant="body2" fontWeight={600}>
+          {row.firstName} {row.lastName}
+        </Typography>
+      </Stack>
+    ),
+  },
+  {
+    id: "email",
+    label: "Email Address",
+    sortable: true,
+    minWidth: 220,
+    render: (row) => (
+      <Stack direction="row" spacing={1} alignItems="center" color="text.secondary">
+        <EmailIcon sx={{ fontSize: 16 }} />
+        <Typography variant="body2">{row.email}</Typography>
+      </Stack>
+    ),
+  },
+  {
+    id: "primaryAuditSector",
+    label: "Audit Sector",
+    sortable: true,
+    minWidth: 160,
+    render: (row) => (
+      <Chip
+        label={row.primaryAuditSector}
+        size="small"
+        sx={{
+          bgcolor: "grey.50",
+          fontWeight: 600,
+          borderRadius: 1,
+          fontSize: "0.75rem",
+        }}
+      />
+    ),
+  },
+  {
+    id: "specializedAuditArea",
+    label: "Specialization",
+    sortable: true,
+    minWidth: 160,
+    render: (row) => (
+      <Typography variant="body2" color="text.secondary" fontWeight={500}>
+        {row.specializedAuditArea}
+      </Typography>
+    ),
+  },
+  {
+    id: "jurisdictions",
+    label: "Jurisdictions",
+    minWidth: 220,
+    render: (row) => (
+      <Stack direction="row" spacing={0.5} flexWrap="wrap" gap={0.5}>
+        {row.jurisdictions.slice(0, 2).map((j) => (
+          <Chip
+            key={j}
+            label={j.replace("_", " ")}
+            size="small"
+            variant="outlined"
+            sx={{ p: 0, height: 20, fontSize: "0.7rem", fontWeight: 600 }}
+          />
+        ))}
+        {row.jurisdictions.length > 2 && (
+          <Tooltip title={row.jurisdictions.slice(2).join(", ")}>
+            <Chip
+              label={`+${row.jurisdictions.length - 2}`}
+              size="small"
+              sx={{ height: 20, fontSize: "0.7rem", fontWeight: 600 }}
+            />
+          </Tooltip>
+        )}
+      </Stack>
+    ),
+  },
+  {
+    id: "certifications",
+    label: "Credentials",
+    minWidth: 140,
+    render: (row) => (
+      <Stack direction="row" spacing={0.5}>
+        {row.certifications.length > 0 ? (
+          row.certifications.map((c, i) => (
+            <Tooltip key={i} title={`${c.type} - Lic: ${c.licenseNumber}`}>
+              <Chip
+                label={c.type}
+                size="small"
+                color="primary"
+                variant="outlined"
+                sx={{
+                  height: 22,
+                  fontSize: "0.7rem",
+                  fontWeight: 700,
+                  bgcolor: "primary.50",
+                  color: "primary.main",
+                }}
+              />
+            </Tooltip>
+          ))
+        ) : (
+          <Typography variant="caption" color="text.disabled">
+            None
+          </Typography>
+        )}
+      </Stack>
+    ),
+  },
 ];
 
 // --- Sub-components ---
 
-const SectionTitle = ({ title, subtitle }: { title: string; subtitle?: string }) => (
-  <Stack spacing={1.5} alignItems="center" textAlign="center" sx={{ mb: 6 }}>
-    <Typography variant="h4" fontWeight={800} sx={{ letterSpacing: "-0.02em" }}>
-      {title}
-    </Typography>
-    {subtitle && (
-      <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 520 }}>
-        {subtitle}
-      </Typography>
-    )}
-  </Stack>
-);
-
-const Hero = () => (
-  <Box sx={{ flex: 1, display: "flex", alignItems: "center", bgcolor: "background.default", py: { xs: 8, md: 12 }, px: 2 }}>
-    <Container maxWidth="md">
-      <Stack spacing={4} alignItems="center" textAlign="center">
-        <Typography variant="h2" fontWeight={900} sx={{ fontSize: { xs: "2.5rem", sm: "3.5rem", md: "4rem" }, lineHeight: 1.1, letterSpacing: "-0.04em" }}>
-          Financial Intelligence & <Box component="span" sx={{ color: "primary.main" }}>Compliance</Box> Platform
-        </Typography>
-        <Typography variant="h6" color="text.secondary" fontWeight={400} sx={{ maxWidth: 650, fontSize: { xs: "1.05rem", sm: "1.25rem" }, lineHeight: 1.6 }}>
-          Streamline your auditing workflows, manage compliance across jurisdictions, and onboard certified auditors — all in one unified, cloud-native platform.
-        </Typography>
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ pt: 2 }}>
-          <Button component={Link} href="/register" variant="contained" size="large" endIcon={<ArrowForwardIcon />} sx={{ py: 2, px: 5, fontSize: "1rem", fontWeight: 700, borderRadius: 3 }}>
-            Register Your Company
-          </Button>
-          <Button component={Link} href="/users" variant="outlined" size="large" sx={{ py: 2, px: 5, fontSize: "1rem", fontWeight: 700, borderRadius: 3, borderWidth: 2, "&:hover": { borderWidth: 2 } }}>
-            View Auditors
-          </Button>
-        </Stack>
-      </Stack>
-    </Container>
-  </Box>
-);
-
-const Stats = () => (
-  <Box sx={{ bgcolor: "primary.main", py: 6 }}>
-    <Container maxWidth="lg">
-      <Grid container spacing={4} justifyContent="center">
-        {STATS.map((stat) => (
-          <Grid size={{ xs: 6, sm: 3 }} key={stat.label}>
-            <Stack alignItems="center" spacing={0.5}>
-              <Typography variant="h4" fontWeight={900} color="#fff" sx={{ letterSpacing: "-0.02em" }}>
-                {stat.value}
-              </Typography>
-              <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.85)", fontWeight: 600, textTransform: "uppercase", fontSize: "0.75rem", letterSpacing: "0.05em" }}>
-                {stat.label}
-              </Typography>
-            </Stack>
-          </Grid>
-        ))}
-      </Grid>
-    </Container>
-  </Box>
-);
-
-const Features = () => (
-  <Box sx={{ py: { xs: 8, md: 15 }, px: 2, bgcolor: "background.paper" }}>
-    <Container maxWidth="lg">
-      <SectionTitle title="Why Choose Audit FIS?" subtitle="Everything you need to manage audits, compliance, and multi-team collaboration in one secure workspace." />
-      <Grid container spacing={3}>
-        {FEATURES.map((feature) => (
-          <Grid size={{ xs: 12, sm: 6, md: 3 }} key={feature.title}>
-            <Paper elevation={0} sx={{ p: 4, height: "100%", borderRadius: 4, border: "1px solid", borderColor: "grey.200", transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)", "&:hover": { boxShadow: "0 24px 48px rgba(0,0,0,0.06)", transform: "translateY(-8px)", borderColor: "primary.light" } }}>
-              <Stack spacing={2.5}>
-                <Box sx={{ opacity: 0.9 }}>{feature.icon}</Box>
-                <Typography variant="h6" fontWeight={800} sx={{ letterSpacing: "-0.01em" }}>
-                  {feature.title}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8, fontSize: "0.925rem" }}>
-                  {feature.description}
-                </Typography>
-              </Stack>
-            </Paper>
-          </Grid>
-        ))}
-      </Grid>
-    </Container>
-  </Box>
-);
-
-
-const CTA = () => (
-  <Box sx={{ py: { xs: 8, md: 12 }, px: 2, bgcolor: "grey.50" }}>
-    <Container maxWidth="sm">
-      <Paper elevation={0} sx={{ p: { xs: 5, sm: 8 }, borderRadius: 6, border: "1px solid", borderColor: "grey.200", textAlign: "center", boxShadow: "0 10px 30px rgba(0,0,0,0.02)" }}>
-        <Typography variant="h4" fontWeight={900} gutterBottom sx={{ letterSpacing: "-0.02em" }}>
-          Ready to get started?
-        </Typography>
-        <Typography variant="body1" color="text.secondary" sx={{ mb: 5, fontSize: "1.1rem" }}>
-          Join the next generation of financial auditing. Build your professional profile or register your firm today.
-        </Typography>
-        <Button component={Link} href="/register" variant="contained" size="large" endIcon={<ArrowForwardIcon />} sx={{ py: 2, px: 6, fontSize: "1.1rem", fontWeight: 700, borderRadius: 3 }}>
-          Start Registration
-        </Button>
-      </Paper>
-    </Container>
-  </Box>
-);
-
 const Footer = () => (
-  <Box component="footer" sx={{ py: 5, px: 2, borderTop: "1px solid", borderColor: "grey.100", bgcolor: "background.paper", textAlign: "center" }}>
+  <Box component="footer" sx={{ py: 5, px: 2, borderTop: "1px solid", borderColor: "grey.100", bgcolor: "background.paper", textAlign: "center", mt: "auto" }}>
     <Typography variant="body2" color="text.secondary" fontWeight={500}>
       © {new Date().getFullYear()} Audit FIS. Precision Audit Compliance. All rights reserved.
     </Typography>
@@ -161,6 +179,12 @@ const Footer = () => (
 // --- Main Page Component ---
 
 export default function Home() {
+  const { data, loading, error } = useApiGet<{ total: number; items: User[] }>(
+    API_ENDPOINTS.USERS.LIST
+  );
+
+  const users = data?.items || [];
+
   return (
     <>
       <Head>
@@ -168,19 +192,100 @@ export default function Home() {
         <meta name="description" content="Global standard for auditor registration and compliance intelligence." />
       </Head>
 
-      <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+      <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh", bgcolor: "background.default" }}>
         <Navbar
           actions={
-            <Button component={Link} href="/register" variant="contained" size="small" endIcon={<ArrowForwardIcon />} sx={{ fontWeight: 700, borderRadius: 2 }}>
-              Get Started
+            <Button component={Link} href="/register" variant="contained" size="small" endIcon={<PersonAddIcon />} sx={{ fontWeight: 700, borderRadius: 2 }}>
+              Register
             </Button>
           }
         />
 
-        <Hero />
-        <Stats />
-        <Features />
-        <CTA />
+        <Container maxWidth="lg" sx={{ py: 6 }}>
+          {/* Header Section */}
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            justifyContent="space-between"
+            alignItems={{ xs: "flex-start", sm: "center" }}
+            spacing={3}
+            sx={{ mb: 6 }}
+          >
+            <Box>
+              <Typography
+                variant="h4"
+                fontWeight={900}
+                sx={{
+                  letterSpacing: "-0.04em",
+                  mb: 1,
+                }}
+              >
+                Auditor Directory
+              </Typography>
+              <Typography variant="h6" color="text.secondary" fontWeight={400} sx={{ opacity: 0.8 }}>
+                Browse through our community of {users.length} certified auditing professionals.
+              </Typography>
+            </Box>
+
+            <Button
+              component={Link}
+              href="/register"
+              variant="contained"
+              startIcon={<PersonAddIcon />}
+              sx={{
+                fontSize: "1.1rem",
+                fontWeight: 700,
+                borderRadius: 3,
+                boxShadow: "0 8px 16px rgba(var(--primary-rgb), 0.2)",
+              }}
+            >
+              Register Now
+            </Button>
+          </Stack>
+
+          {/* Table Surface */}
+          <Paper
+            elevation={0}
+            sx={{
+              p: 1,
+              borderRadius: 4,
+              border: "1px solid",
+              borderColor: "grey.200",
+              bgcolor: "background.paper",
+              boxShadow: "0 20px 48px rgba(0,0,0,0.04)",
+              overflow: "hidden",
+            }}
+          >
+            {loading ? (
+              <Stack spacing={2} p={2}>
+                <Skeleton variant="rectangular" height={60} sx={{ borderRadius: 1 }} />
+                {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                  <Skeleton key={i} variant="rectangular" height={52} sx={{ borderRadius: 1 }} />
+                ))}
+              </Stack>
+            ) : error ? (
+              <Box sx={{ p: 8, textAlign: "center" }}>
+                <Typography variant="h6" color="error.main" fontWeight={700}>
+                  Failed to synchronize directory.
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                  Please verify your network connection or contact system administrator.
+                </Typography>
+              </Box>
+            ) : (
+              <Fade in timeout={800}>
+                <Box>
+                  <DataTable
+                    columns={columns}
+                    rows={users}
+                    getRowId={(row) => row.id}
+                    emptyMessage="No auditors found. Be the first to register!"
+                  />
+                </Box>
+              </Fade>
+            )}
+          </Paper>
+        </Container>
+
         <Footer />
       </Box>
     </>

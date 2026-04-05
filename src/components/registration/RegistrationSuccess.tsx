@@ -1,5 +1,5 @@
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import { Box, Button, Stack, Typography, Zoom } from "@mui/material";
 import { useRouter } from "next/router";
 
@@ -49,7 +49,7 @@ export default function RegistrationSuccess() {
             size="large"
             fullWidth
             endIcon={<ArrowForwardIcon />}
-            onClick={() => router.push("/users")}
+            onClick={() => router.push("/")}
             sx={{
               py: 2,
               fontSize: "1rem",
@@ -66,7 +66,7 @@ export default function RegistrationSuccess() {
           >
             Go to Auditor Directory
           </Button>
-          
+
           <Button
             variant="text"
             onClick={() => router.push("/")}
