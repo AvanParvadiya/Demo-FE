@@ -78,39 +78,37 @@ export default function RegisterPage() {
               bgcolor: "#fff",
             }}
           >
-            {/* Step 0: User Identity & OTP Dispatch */}
-            {activeStep === 0 && (
-              <IdentificationStep
-                defaultValues={identification}
-                onNext={handleStep1Submit}
-              />
-            )}
-
-            {/* Step 1: OTP Verification */}
-            {activeStep === 1 && (
-              <VerificationStep
-                email={identification.email ?? ""}
-                otpCode={otp}
-                onNext={handleStep2Submit}
-                onBack={handleBack}
-              />
-            )}
-
-            {/* Step 2: Professional Details & Certifications */}
-            {activeStep === 2 && (
-              <ProfileStep
-                defaultValues={profile}
-                certifications={certifications}
-                onCertificationsChange={setCertifications}
-                onNext={handleFinalSubmit}
-                onBack={handleBack}
-                loading={registering}
-                error={registrationError}
-              />
-            )}
-
-            {/* Step 3: Registration Success Acknowledgement */}
-            {isSuccessStep && <RegistrationSuccess />}
+            {/* Step Mapping - More concise than switch/if blocks */}
+            {
+              {
+                0: (
+                  <IdentificationStep
+                    defaultValues={identification}
+                    onNext={handleStep1Submit}
+                  />
+                ),
+                1: (
+                  <VerificationStep
+                    email={identification.email ?? ""}
+                    otpCode={otp}
+                    onNext={handleStep2Submit}
+                    onBack={handleBack}
+                  />
+                ),
+                2: (
+                  <ProfileStep
+                    defaultValues={profile}
+                    certifications={certifications}
+                    onCertificationsChange={setCertifications}
+                    onNext={handleFinalSubmit}
+                    onBack={handleBack}
+                    loading={registering}
+                    error={registrationError}
+                  />
+                ),
+                3: <RegistrationSuccess />,
+              }[activeStep]
+            }
           </Paper>
         </Container>
       </Box>
