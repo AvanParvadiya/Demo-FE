@@ -18,6 +18,7 @@ export const API_ENDPOINTS = {
     LIST: `${API_VERSION}/users`,
     DETAIL: (id: string | number) => `${API_VERSION}/users/${id}`,
     CREATE: `${API_VERSION}/users`,
+    REGISTER: `${API_VERSION}/users/register`,
   },
 
   // ── Audit ──────────────────────────────────────────────────────────

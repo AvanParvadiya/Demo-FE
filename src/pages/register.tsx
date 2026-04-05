@@ -15,9 +15,18 @@ import VerificationStep from "@/components/registration/VerificationStep";
 
 import type { CertificationFormData, IdentificationFormData, ProfileFormData, RegistrationData, VerificationFormData } from "@/schemas/registration";
 
+import { useApiMutation } from "@/hooks";
+import { API_ENDPOINTS } from "@/lib";
+
 export default function RegisterPage() {
   const [activeStep, setActiveStep] = useState(0);
   const [completed, setCompleted] = useState(false);
+
+  const {
+    mutate: register,
+    loading: registering,
+    error: registrationError,
+  } = useApiMutation<RegistrationData, any>("post", API_ENDPOINTS.USERS.REGISTER);
 
   // Accumulated data across steps
   const [identificationData, setIdentificationData] =
@@ -46,7 +55,7 @@ export default function RegisterPage() {
   }, []);
 
   const handleStep3Next = useCallback(
-    (data: ProfileFormData) => {
+    async (data: ProfileFormData) => {
       setProfileDefaults(data);
 
       const finalData: RegistrationData = {
@@ -58,13 +67,14 @@ export default function RegisterPage() {
         certifications,
       };
 
-
-      // TODO: Submit to API
-      console.log("Registration complete:", finalData);
-      setCompleted(true);
+      const result = await register(finalData);
+      if (result) {
+        setCompleted(true);
+      }
     },
-    [identificationData, certifications]
+    [identificationData, certifications, otpCode, register]
   );
+
 
   const handleBack = useCallback(() => {
     setActiveStep((prev) => prev - 1);
@@ -178,8 +188,11 @@ export default function RegisterPage() {
                 onCertificationsChange={setCertifications}
                 onNext={handleStep3Next}
                 onBack={handleBack}
+                loading={registering}
+                error={registrationError}
               />
             )}
+
           </Paper>
         </Container>
       </Box>

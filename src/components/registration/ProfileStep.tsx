@@ -1,4 +1,4 @@
-import { FormCheckbox, FormSelect } from "@/components/common";
+import { FormCheckbox, FormSelect, LoadingButton } from "@/components/common";
 import {
   AUDIT_SECTOR_MAPPING,
   AUDIT_SECTORS,
@@ -11,6 +11,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import EditIcon from "@mui/icons-material/Edit";
+import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
@@ -33,6 +34,8 @@ interface ProfileStepProps {
   onCertificationsChange: (certs: CertificationFormData[]) => void;
   onNext: (data: ProfileFormData) => void;
   onBack: () => void;
+  loading?: boolean;
+  error?: string | null;
 }
 
 export default function ProfileStep({
@@ -41,6 +44,8 @@ export default function ProfileStep({
   onCertificationsChange,
   onNext,
   onBack,
+  loading = false,
+  error = null,
 }: ProfileStepProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -108,6 +113,12 @@ export default function ProfileStep({
         Please provide your professional audit specialization and credentials
       </Typography>
 
+      {error && (
+        <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
+          {error}
+        </Alert>
+      )}
+
       {/* --- A. Professional Certifications --- */}
       <Paper
         variant="outlined"
@@ -134,6 +145,7 @@ export default function ProfileStep({
             size="small"
             startIcon={<AddIcon />}
             onClick={handleOpenAddDialog}
+            disabled={loading}
             sx={{
               textTransform: "none",
               borderRadius: 2,
@@ -208,6 +220,7 @@ export default function ProfileStep({
                     <IconButton
                       size="small"
                       color="primary"
+                      disabled={loading}
                       onClick={() => handleOpenEditDialog(index)}
                       sx={{ bgcolor: "primary.50", "&:hover": { bgcolor: "primary.100" } }}
                     >
@@ -218,6 +231,7 @@ export default function ProfileStep({
                     <IconButton
                       size="small"
                       color="error"
+                      disabled={loading}
                       onClick={() => handleRemoveCertification(index)}
                       sx={{ bgcolor: "error.50", "&:hover": { bgcolor: "error.100" } }}
                     >
@@ -249,6 +263,7 @@ export default function ProfileStep({
             required
             options={AUDIT_SECTORS}
             placeholder="Select primary sector"
+            disabled={loading}
           />
 
           <FormSelect<ProfileFormData>
@@ -257,7 +272,7 @@ export default function ProfileStep({
             label="Specialized Audit Area"
             required
             options={specializedAreaOptions}
-            disabled={!selectedSector}
+            disabled={!selectedSector || loading}
             placeholder={
               !selectedSector
                 ? "Select a sector first"
@@ -271,7 +286,7 @@ export default function ProfileStep({
           name="jurisdictions"
           control={control}
           render={({ field }) => (
-            <FormControl error={!!errors.jurisdictions} component="fieldset">
+            <FormControl error={!!errors.jurisdictions} component="fieldset" disabled={loading}>
               <Typography variant="body2" fontWeight={600} sx={{ mb: 1.5 }}>
                 Jurisdiction (Select regional standards) *
               </Typography>
@@ -354,6 +369,7 @@ export default function ProfileStep({
           <FormCheckbox<ProfileFormData>
             name="independenceDeclaration"
             control={control}
+            disabled={loading}
             label={
               <Box sx={{ ml: 1 }}>
                 <Typography variant="body2" fontWeight={700}>
@@ -380,6 +396,7 @@ export default function ProfileStep({
           size="large"
           fullWidth
           onClick={onBack}
+          disabled={loading}
           sx={{
             py: 1.6,
             fontSize: "1rem",
@@ -391,12 +408,14 @@ export default function ProfileStep({
         >
           Back
         </Button>
-        <Button
+        <LoadingButton
           type="submit"
           variant="contained"
           color="primary"
           size="large"
           fullWidth
+          loading={loading}
+          loadingText="Finalizing Registration…"
           sx={{
             py: 1.6,
             fontSize: "1rem",
@@ -407,10 +426,11 @@ export default function ProfileStep({
           }}
         >
           Complete Registration
-        </Button>
+        </LoadingButton>
       </Stack>
 
     </Box>
   );
 }
+
 
