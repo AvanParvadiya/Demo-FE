@@ -118,9 +118,10 @@ export default function ProfileStep({
         }}
       >
         <Stack
-          direction="row"
+          direction={{ xs: "column", sm: "row" }}
           justifyContent="space-between"
-          alignItems="center"
+          alignItems={{ xs: "stretch", sm: "center" }}
+          spacing={2}
           sx={{ mb: 2 }}
         >
           <Box>
@@ -136,9 +137,11 @@ export default function ProfileStep({
             sx={{
               textTransform: "none",
               borderRadius: 2,
-              px: 2,
+              px: { xs: 1.5, sm: 2 },
+              py: { xs: 1, sm: 0.5 },
               boxShadow: "none",
               "&:hover": { boxShadow: "none" },
+              width: { xs: "100%", sm: "auto" },
             }}
           >
             Add Certification
@@ -161,9 +164,10 @@ export default function ProfileStep({
             {certifications.map((cert, index) => (
               <Stack
                 key={index}
-                direction="row"
-                alignItems="center"
+                direction={{ xs: "column", sm: "row" }}
+                alignItems={{ xs: "flex-start", sm: "center" }}
                 justifyContent="space-between"
+                spacing={2}
                 sx={{
                   py: 1.5,
                   px: 2,
@@ -173,8 +177,8 @@ export default function ProfileStep({
                   borderColor: "grey.200",
                 }}
               >
-                <Stack spacing={0.5}>
-                  <Stack direction="row" spacing={1} alignItems="center">
+                <Stack spacing={0.5} sx={{ width: "100%" }}>
+                  <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
                     <Chip
                       label={cert.type}
                       color="primary"
@@ -189,7 +193,17 @@ export default function ProfileStep({
                     Qualified in {cert.year}
                   </Typography>
                 </Stack>
-                <Stack direction="row" spacing={0.5}>
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  sx={{
+                    width: { xs: "100%", sm: "auto" },
+                    justifyContent: { xs: "flex-end", sm: "flex-start" },
+                    borderTop: { xs: "1px solid", sm: "none" },
+                    borderColor: "grey.100",
+                    pt: { xs: 1, sm: 0 },
+                  }}
+                >
                   <Tooltip title="Edit Certification" arrow>
                     <IconButton
                       size="small"
@@ -215,6 +229,7 @@ export default function ProfileStep({
             ))}
           </Stack>
         )}
+
       </Paper>
 
       <AddCertificationDialog
