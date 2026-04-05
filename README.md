@@ -142,6 +142,33 @@ fe/src/
 
 ---
 
+## Accessing the Registration Page
+
+There are **4 ways** a user can navigate to the `/register` page from within the application:
+
+### 1. Direct URL
+Navigate directly in the browser:
+```
+http://localhost:3000/register
+```
+
+### 2. Navbar — "Get Started" Button
+On the **Landing Page** (`/`), the top navigation bar includes a primary **"Get Started"** button on the right side. Clicking it navigates to `/register`.
+
+> Location: `index.tsx` → `<Navbar actions={...}>` → `href="/register"`
+
+### 3. Hero Section — "Register Your Company" Button
+The main **Hero section** of the landing page has a prominent **"Register Your Company"** call-to-action button displayed front and centre. This is the most visible entry point.
+
+> Location: `index.tsx` → `<Hero />` component → primary `Button` → `href="/register"`
+
+### 4. CTA Section — "Start Registration" Button
+At the bottom of the landing page there is a dedicated **"Call to Action"** panel with a **"Start Registration"** button, targeting users who have scrolled through the features and stats and are ready to sign up.
+
+> Location: `index.tsx` → `<CTA />` component → `Button` → `href="/register"`
+
+---
+
 ## Registration Wizard Flow
 
 The registration wizard is a 4-state flow:
