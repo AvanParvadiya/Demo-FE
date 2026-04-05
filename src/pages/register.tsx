@@ -1,11 +1,11 @@
-import { Box, Container, Paper } from "@mui/material";
+import { Box, Container, Fade, Paper } from "@mui/material";
 import Head from "next/head";
-import { useRouter } from "next/router";
 import { useCallback, useState } from "react";
 
 // Components
 import IdentificationStep from "@/components/registration/IdentificationStep";
 import ProfileStep from "@/components/registration/ProfileStep";
+import RegistrationSuccess from "@/components/registration/RegistrationSuccess";
 import StepperHeader from "@/components/registration/StepperHeader";
 import VerificationStep from "@/components/registration/VerificationStep";
 
@@ -27,9 +27,9 @@ import type {
  * 0. Identification (Basic Info + OTP Sent)
  * 1. Verification (OTP Validation)
  * 2. Profile Setup (Sectors, Jurisdictions & Certifications)
+ * 3. Success (Post-onboarding acknowledgement)
  */
 export default function RegisterPage() {
-  const router = useRouter();
   const [activeStep, setActiveStep] = useState(0);
 
   // --- API Mutation ---
@@ -40,7 +40,6 @@ export default function RegisterPage() {
   } = useApiMutation<RegistrationData, any>("post", API_ENDPOINTS.USERS.REGISTER);
 
   // --- Wizard State ---
-  // We keep state local to this orchestration component so data isn't lost when moving between steps
   const [identification, setIdentification] = useState<Partial<IdentificationFormData>>({});
   const [certifications, setCertifications] = useState<CertificationFormData[]>([]);
   const [profile, setProfile] = useState<Partial<ProfileFormData>>({});
@@ -64,8 +63,8 @@ export default function RegisterPage() {
     setActiveStep(2);
   }, []);
 
-  /** Step 2 -> Final: Profile complete, submit entire registration payload */
-  const handleStep3Submit = useCallback(
+  /** Step 2 -> Final: Submit entire registration payload */
+  const handleFinalSubmit = useCallback(
     async (profileData: ProfileFormData) => {
       setProfile(profileData);
 
@@ -81,17 +80,19 @@ export default function RegisterPage() {
 
       const success = await register(payload);
       if (success) {
-        // Redirect to the auditor directory upon successful registration
-        await router.push("/users");
+        // Move to step 3 instead of redirecting immediately
+        setActiveStep(3);
       }
     },
-    [identification, certifications, otp, register, router]
+    [identification, certifications, otp, register]
   );
 
   /** Generic handler to return to previous step */
   const handleBack = useCallback(() => {
     setActiveStep((prev) => prev - 1);
   }, []);
+
+  const isSuccessStep = activeStep === 3;
 
   return (
     <>
@@ -111,20 +112,31 @@ export default function RegisterPage() {
           justifyContent: "center",
           bgcolor: "background.default",
           py: 4,
+          transition: "background-color 0.5s ease",
         }}
       >
         <Container maxWidth="sm" disableGutters sx={{ px: { xs: 2, sm: 0 } }}>
-          {/* Visual progress indicator */}
-          <StepperHeader activeStep={activeStep} />
+          {/* Visual progress indicator (hidden on success step) */}
+          {!isSuccessStep && (
+            <Fade in={!isSuccessStep}>
+              <Box>
+                <StepperHeader activeStep={activeStep} />
+              </Box>
+            </Fade>
+          )}
 
           <Paper
             elevation={0}
             sx={{
-              p: { xs: 3, sm: 5 },
-              borderRadius: 4,
+              p: { xs: 3, sm: isSuccessStep ? 8 : 5 },
+              borderRadius: isSuccessStep ? 6 : 4,
               border: "1px solid",
-              borderColor: "grey.200",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.03)",
+              borderColor: isSuccessStep ? "success.light" : "grey.200",
+              boxShadow: isSuccessStep
+                ? "0 12px 48px rgba(0,0,0,0.06)"
+                : "0 4px 12px rgba(0,0,0,0.03)",
+              transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
+              bgcolor: "#fff",
             }}
           >
             {/* Step 0: User Identity & OTP Dispatch */}
@@ -151,15 +163,19 @@ export default function RegisterPage() {
                 defaultValues={profile}
                 certifications={certifications}
                 onCertificationsChange={setCertifications}
-                onNext={handleStep3Submit}
+                onNext={handleFinalSubmit}
                 onBack={handleBack}
                 loading={registering}
                 error={registrationError}
               />
             )}
+
+            {/* Step 3: Registration Success Acknowledgement */}
+            {isSuccessStep && <RegistrationSuccess />}
           </Paper>
         </Container>
       </Box>
     </>
   );
 }
+
