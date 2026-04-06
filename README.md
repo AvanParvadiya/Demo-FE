@@ -1,6 +1,6 @@
 # Audit FIS — Frontend
 
-A modern, multi-step auditor registration and directory platform built with **Next.js 16**, **Material UI**, and **React Hook Form**.
+A modern, multi-step auditor registration platform featuring a real-time **Auditor Directory** on the home page. This allows users to browse registered professionals and verify all onboarding data directly against the system database.
 
 ---
 
@@ -82,7 +82,7 @@ NEXT_PUBLIC_API_URL=https://your-api-domain.com
 npm run dev
 ```
 
-The application will start at **http://localhost:3000**.
+The application will start at **http://localhost:3000**. Navigating to this address will display the live Auditor Directory, which can be used to verify that new registrations are being correctly saved to the database.
 
 ### Production Build
 
@@ -121,9 +121,8 @@ fe/src/
 ├── lib/
 │   └── api.ts              # Axios instance + API endpoint constants
 ├── pages/
-│   ├── index.tsx           # Landing page
-│   ├── register.tsx        # Auditor registration wizard
-│   └── users/              # Auditor directory
+│   ├── index.tsx           # Home page & live Auditor Directory (database verification)
+│   └── register.tsx        # Auditor registration wizard
 ├── schemas/
 │   └── registration.ts     # Zod schemas + TypeScript types
 └── theme/
@@ -136,15 +135,14 @@ fe/src/
 
 | Route | Description |
 |---|---|
-| `/` | Landing page with platform overview and navigation |
+| `/` | **Home Page & Directory**: Displays all registered auditors currently in the database. Use this to verify that registration data is correctly stored and visible. |
 | `/register` | 3-step auditor registration wizard |
-| `/users` | Auditor directory listing |
 
 ---
 
 ## Accessing the Registration Page
 
-There are **4 ways** a user can navigate to the `/register` page from within the application:
+There are **3 primary ways** a user can navigate to the `/register` page from within the application:
 
 ### 1. Direct URL
 Navigate directly in the browser:
@@ -152,20 +150,15 @@ Navigate directly in the browser:
 http://localhost:3000/register
 ```
 
-### 2. Navbar — "Get Started" Button
-On the **Landing Page** (`/`), the top navigation bar includes a primary **"Get Started"** button on the right side. Clicking it navigates to `/register`.
+### 2. Navbar — "Register" Button
+On the **Home Page** (`/`), the top navigation bar includes a primary **"Register"** button on the right side.
 
 > Location: `index.tsx` → `<Navbar actions={...}>` → `href="/register"`
 
-### 3. Hero Section — "Register Your Company" Button
-The main **Hero section** of the landing page has a prominent **"Register Your Company"** call-to-action button displayed front and centre. This is the most visible entry point.
+### 3. Directory Header — "Register Now" Button
+Within the **Auditor Directory** component on the home page, there is a prominent **"Register Now"** call-to-action button located next to the directory title.
 
-> Location: `index.tsx` → `<Hero />` component → primary `Button` → `href="/register"`
-
-### 4. CTA Section — "Start Registration" Button
-At the bottom of the landing page there is a dedicated **"Call to Action"** panel with a **"Start Registration"** button, targeting users who have scrolled through the features and stats and are ready to sign up.
-
-> Location: `index.tsx` → `<CTA />` component → `Button` → `href="/register"`
+> Location: `index.tsx` → `Auditor Directory` header → `Button` → `href="/register"`
 
 ---
 

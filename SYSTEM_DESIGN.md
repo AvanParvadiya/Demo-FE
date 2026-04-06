@@ -6,7 +6,7 @@ Right now, Code is running as a classic **monolith**. We've got a single NestJS 
 While this works great for the MVP, we’ll hit some walls as we move past a few hundred concurrent users:
 *   **The In-Memory Trap**: Our OTPs are currently stored in a simple JS `Map`. If the server restarts, everyone's active OTPs vanish. More importantly, we can't spin up a second server instance because they won't share that Map.
 *   **Blocking Mail Operations**: We're simulating email sends right now, but once we hook up a real provider (like SendGrid), those network calls will add latency to our main API response.
-*   **DB Saturation**: The `/users` directory is basically just a big read operation. As traffic grows, hitting the primary database for every single page load will slow down the registration writes.
+*   **DB Saturation**: The auditor directory on the home page is basically just a big read operation. As traffic grows, hitting the primary database for every single page load will slow down the registration writes.
 
 ---
 

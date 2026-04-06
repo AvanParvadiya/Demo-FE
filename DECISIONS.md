@@ -91,7 +91,7 @@ This document explains the key architectural and library decisions made during t
 - Familiar API with automatic JSON serialization/deserialization
 - A single Axios instance in `src/lib/` acts as an API client that can be extended with auth headers (JWT) when authentication is implemented
 
-> **Future Consideration:** **RTK Query** (part of Redux Toolkit) is a strong alternative that combines state management and API call handling in one place — automatically generating loading/error/data states, handling cache invalidation, and eliminating boilerplate. If React Redux is adopted for global state, migrating API calls to RTK Query would be the natural next step. **SWR** and **TanStack Query** are similarly viable for data-fetching-heavy pages like the auditor directory (`/users`).
+> **Future Consideration:** **RTK Query** (part of Redux Toolkit) is a strong alternative that combines state management and API call handling in one place — automatically generating loading/error/data states, handling cache invalidation, and eliminating boilerplate. If React Redux is adopted for global state, migrating API calls to RTK Query would be the natural next step. **SWR** and **TanStack Query** are similarly viable for data-fetching-heavy pages like the auditor directory (/).
 
 ---
 
@@ -103,7 +103,7 @@ This document explains the key architectural and library decisions made during t
 
 **Why:**
 - Pages Router is stable, well-understood, and appropriate for this type of multi-page form-heavy application
-- Server-side rendering (SSR) capability enables better SEO for the landing page (`/`) and auditor directory (`/users`)
+- Server-side rendering (SSR) capability enables better SEO for the home page (/) containing the auditor directory
 - The App Router was considered but deferred — its server component model adds complexity that is not required for a client-heavy registration wizard
 - Next.js provides built-in routing, `<Head>` management, and image optimization without additional packages
 
