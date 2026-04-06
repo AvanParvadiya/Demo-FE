@@ -164,20 +164,17 @@ Within the **Auditor Directory** component on the home page, there is a prominen
 
 ## Registration Wizard Flow
 
-The registration wizard is a 4-state flow:
+The registration wizard follows a state-persistent, secure 4-step process:
 
-```
-Step 0 (Identification)
-    → Enter name + email → OTP sent to email
-Step 1 (Verification)
-    → Enter 6-digit OTP → Email confirmed
-Step 2 (Profile)
-    → Certifications, Audit Sector, Jurisdictions, Independence Declaration
-Step 3 (Success)
-    → Registration confirmed → Link to Auditor Directory
-```
+1.  **Step 0 (Identification)**: User enters basic identity details. Submitting sends a secure 6-digit OTP to the provided email.
+2.  **Step 1 (Verification)**: User enters the OTP to confirm ownership.
+    *   **Secure Validation**: OTP must be verified before proceeding.
+    *   **Backward Navigation (Reset)**: Returning to Step 0 from here completely resets the OTP state. If the user moves forward again, a fresh OTP is required.
+3.  **Step 2 (Profile Setup)**: User completes their professional profile (Certifications, Sectors, Jurisdictions).
+    *   **State Persistence (Locked)**: If a user navigates back to Step 1 from here, the OTP field is displayed in a **disabled** "Verified" format. This confirms the verification is still valid while preventing accidental changes.
+4.  **Step 3 (Success)**: Final confirmation. Users can immediately view their profile in the live **Auditor Directory**.
 
-All inter-step data is persisted in the `useRegistration` master hook, so navigating **Back** never loses user input.
+All wizard data is orchestrated via the `useRegistration` master hook, ensuring that intermediate states are only cleared when logically necessary.
 
 ---
 
@@ -197,4 +194,4 @@ Complex business logic is extracted into dedicated custom hooks, keeping UI comp
 
 All API calls are made via a centralized Axios instance defined in `src/lib/`. The base URL is configured via the `NEXT_PUBLIC_API_URL` environment variable.
 
-See the [Backend README](../BE/README.md) for a full list of available API endpoints.
+See the [Backend README](https://github.com/AvanParvadiya/Demo-BE/blob/master/README.md) for a full list of available API endpoints.
