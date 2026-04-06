@@ -24,6 +24,7 @@ export default function RegisterPage() {
     setCertifications,
     profile,
     otp,
+    isOtpVerified,
     registering,
     registrationError,
     isSuccessStep,
@@ -91,6 +92,7 @@ export default function RegisterPage() {
                   <VerificationStep
                     email={identification.email ?? ""}
                     otpCode={otp}
+                    verified={isOtpVerified}
                     onNext={handleStep2Submit}
                     onBack={handleBack}
                   />

@@ -22,6 +22,7 @@ export function useRegistration() {
   const [certifications, setCertifications] = useState<CertificationFormData[]>([]);
   const [profile, setProfile] = useState<Partial<ProfileFormData>>({});
   const [otp, setOtp] = useState("");
+  const [isOtpVerified, setIsOtpVerified] = useState(false);
 
   // --- API Mutation ---
   const {
@@ -36,6 +37,7 @@ export function useRegistration() {
     (data: IdentificationFormData, otpCode: string) => {
       setIdentification(data);
       setOtp(otpCode);
+      setIsOtpVerified(false);
       setActiveStep(1);
     },
     []
@@ -44,6 +46,7 @@ export function useRegistration() {
   /** Step 1 -> 2: Email verified via OTP */
   const handleStep2Submit = useCallback((data: VerificationFormData) => {
     setOtp(data.otp);
+    setIsOtpVerified(true);
     setActiveStep(2);
   }, []);
 
@@ -73,7 +76,15 @@ export function useRegistration() {
 
   /** Generic handler to return to the previous onboarding step */
   const handleBack = useCallback(() => {
-    setActiveStep((prev) => prev - 1);
+    setActiveStep((prev) => {
+      const nextStep = prev - 1;
+      // If moving back to Step 1 (Identification), reset OTP state
+      if (nextStep === 0) {
+        setOtp("");
+        setIsOtpVerified(false);
+      }
+      return nextStep;
+    });
   }, []);
 
   return {
@@ -83,6 +94,7 @@ export function useRegistration() {
     setCertifications,
     profile,
     otp,
+    isOtpVerified,
     registering,
     registrationError,
     isSuccessStep: activeStep === 3,

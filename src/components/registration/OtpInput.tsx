@@ -8,6 +8,7 @@ interface OtpInputProps {
   onChange: (value: string) => void;
   error?: boolean;
   helperText?: string;
+  disabled?: boolean;
 }
 
 const OTP_LENGTH = 6;
@@ -17,6 +18,7 @@ export default function OtpInput({
   onChange,
   error,
   helperText,
+  disabled = false,
 }: OtpInputProps) {
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.replace(/\D/g, "").slice(0, OTP_LENGTH);
@@ -38,8 +40,9 @@ export default function OtpInput({
           value={value}
           onChange={handleChange}
           error={error}
+          disabled={disabled}
           variant="outlined"
-          autoFocus
+          autoFocus={!disabled}
           fullWidth
           autoComplete="one-time-code"
           inputProps={{
